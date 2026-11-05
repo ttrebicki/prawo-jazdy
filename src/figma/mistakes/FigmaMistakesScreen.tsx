@@ -1,14 +1,15 @@
 import { useMemo, useState } from 'react'
 import type { ProgressStore } from '../../domain/progress-store.ts'
 import type { CategoryCode, QuestionRecord } from '../../domain/types.ts'
-import { formatListDate, mistakeCountKicker } from './format.ts'
+import {
+  formatListDate,
+  mistakeCountKicker,
+  showRemainingQuestionsLabel,
+} from './format.ts'
 import { getLastWrongAnswerLabel } from './lastWrongAnswer.ts'
 import { MistakeQuestionRow } from './MistakeQuestionRow.tsx'
 import arrowLeftUrl from './assets/arrow-left.svg'
-import {
-  demoQuestionLabel,
-  placeholderLastAnswerLabel,
-} from './placeholders.ts'
+import { demoQuestionLabel } from './placeholders.ts'
 import iosBatteryUrl from './assets/ios-battery.svg'
 import iosSignalUrl from './assets/ios-signal.svg'
 import iosWifiUrl from './assets/ios-wifi.svg'
@@ -43,9 +44,11 @@ export function FigmaMistakesScreen({
         if (!question) {
           return null
         }
-        const fromSession = getLastWrongAnswerLabel(progress, entry.number, category)
-        const lastAnswerLabel =
-          fromSession ?? placeholderLastAnswerLabel(index)
+        const lastAnswerLabel = getLastWrongAnswerLabel(
+          progress,
+          entry.number,
+          category,
+        )
         return {
           key: entry.number,
           question,
@@ -144,7 +147,7 @@ export function FigmaMistakesScreen({
             <>
               <div className="figma-mistakes-list-meta" data-node-id="5:3855">
                 <p>OSTATNIO BŁĘDNIE</p>
-                <p>{listDate}</p>
+                {listDate ? <p>{listDate}</p> : null}
               </div>
               {visibleRows.map((row) => (
                 <MistakeQuestionRow
@@ -165,7 +168,7 @@ export function FigmaMistakesScreen({
             className="figma-mistakes-show-more"
             onClick={() => setShowAll(true)}
           >
-            Pokaż pozostałe {hiddenCount} pytań
+            {showRemainingQuestionsLabel(hiddenCount)}
           </button>
         ) : null}
 

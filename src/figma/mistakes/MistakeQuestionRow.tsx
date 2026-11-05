@@ -9,7 +9,7 @@ import chevronRightUrl from './assets/chevron-right.svg'
 export interface MistakeQuestionRowProps {
   question: QuestionRecord
   listIndex: number
-  lastAnswerLabel: string
+  lastAnswerLabel: string | null
   onOpen: (question: QuestionRecord) => void
 }
 
@@ -37,7 +37,9 @@ export function MistakeQuestionRow({
         </div>
         <p className="figma-mistakes-row-prompt">{placeholderPrompt(listIndex)}</p>
         <p className="figma-mistakes-row-status">
-          Ostatnio: {lastAnswerLabel} · niepoprawnie
+          {lastAnswerLabel
+            ? `Ostatnio: ${lastAnswerLabel} · niepoprawnie`
+            : 'Ostatnio: niepoprawnie'}
         </p>
       </div>
       <span className="figma-mistakes-row-chevron" aria-hidden="true">
