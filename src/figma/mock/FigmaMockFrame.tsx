@@ -4,11 +4,7 @@ interface FigmaMockFrameProps {
   children: ReactNode
 }
 
-/** Non-interactive 402px-wide viewport for locked Figma mocks. */
+/** 402px-wide viewport wrapper for Figma mocks. */
 export function FigmaMockFrame({ children }: FigmaMockFrameProps) {
-  return (
-    <div className="figma-mock-frame" aria-hidden="true">
-      {children}
-    </div>
-  )
+  return <div className="figma-mock-frame">{children}</div>
 }

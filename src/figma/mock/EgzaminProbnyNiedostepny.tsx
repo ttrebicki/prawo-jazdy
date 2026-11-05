@@ -34,7 +34,17 @@ const EXAM_RULES = [
   },
 ] as const
 
-export function EgzaminProbnyNiedostepny() {
+export interface EgzaminProbnyNiedostepnyProps {
+  onBack: () => void
+  onPractice: () => void
+  onHome: () => void
+}
+
+export function EgzaminProbnyNiedostepny({
+  onBack,
+  onPractice,
+  onHome,
+}: EgzaminProbnyNiedostepnyProps) {
   return (
     <div
       className="figma-mock-exam-unavailable"
@@ -83,10 +93,13 @@ export function EgzaminProbnyNiedostepny() {
         data-name="Nagłówek"
         data-node-id="5:3906"
       >
-        <div
+        <button
+          type="button"
           className="figma-mock-exam-unavailable__back"
           data-name="Powrót"
           data-node-id="5:3907"
+          onClick={onBack}
+          aria-label="Powrót"
         >
           <div
             className="figma-mock-exam-unavailable__icon-slot figma-mock-exam-unavailable__icon-slot--18"
@@ -95,7 +108,7 @@ export function EgzaminProbnyNiedostepny() {
           >
             <img alt="" src={imgArrowLeft} />
           </div>
-        </div>
+        </button>
         <p className="figma-mock-exam-unavailable__header-title" data-node-id="5:3909">
           Egzamin próbny
         </p>
@@ -189,22 +202,29 @@ export function EgzaminProbnyNiedostepny() {
           </div>
         </div>
 
-        <div
+        <button
+          type="button"
           className="figma-mock-exam-unavailable__primary-action"
           data-name="Działanie"
           data-node-id="5:3945"
+          onClick={onPractice}
         >
-          <p className="figma-mock-exam-unavailable__primary-label" data-node-id="5:3946">
+          <span className="figma-mock-exam-unavailable__primary-label" data-node-id="5:3946">
             Wróć do ćwiczeń
-          </p>
+          </span>
           <div className="figma-mock-exam-unavailable__icon-slot figma-mock-exam-unavailable__icon-slot--18">
             <img alt="" src={imgArrowRightPrimary} />
           </div>
-        </div>
+        </button>
 
-        <p className="figma-mock-exam-unavailable__secondary-link" data-node-id="5:3948">
+        <button
+          type="button"
+          className="figma-mock-exam-unavailable__secondary-link"
+          data-node-id="5:3948"
+          onClick={onHome}
+        >
           Wróć na start
-        </p>
+        </button>
       </div>
 
       <div

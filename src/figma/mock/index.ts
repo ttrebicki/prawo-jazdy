@@ -1,5 +1,8 @@
 import './mock.css'
 
-export { EgzaminProbnyNiedostepny } from './EgzaminProbnyNiedostepny.tsx'
-export { EgzaminProbnyNiedostepnyMock } from './EgzaminProbnyNiedostepnyMock.tsx'
+export { EgzaminProbnyNiedostepny, type EgzaminProbnyNiedostepnyProps } from './EgzaminProbnyNiedostepny.tsx'
+export {
+  EgzaminProbnyNiedostepnyMock,
+  type EgzaminProbnyNiedostepnyMockProps,
+} from './EgzaminProbnyNiedostepnyMock.tsx'
 export { FigmaMockFrame } from './FigmaMockFrame.tsx'

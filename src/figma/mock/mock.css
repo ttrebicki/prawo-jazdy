@@ -1,12 +1,7 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
-
 .figma-mock-frame {
   width: 402px;
   max-width: 100%;
   margin: 0 auto;
-  pointer-events: none;
-  user-select: none;
-  -webkit-user-select: none;
 }
 
 .figma-mock-exam-unavailable {
@@ -25,7 +20,7 @@
   color: var(--figma-mock-text);
   display: flex;
   flex-direction: column;
-  font-family: Inter, system-ui, -apple-system, sans-serif;
+  font-family: system-ui, -apple-system, sans-serif;
   overflow: hidden;
   width: 100%;
 }
@@ -56,8 +51,10 @@
 }
 
 .figma-mock-exam-unavailable__icon-slot {
+  align-items: center;
+  display: flex;
   flex-shrink: 0;
-  position: relative;
+  justify-content: center;
 }
 
 .figma-mock-exam-unavailable__icon-slot--18 {
@@ -87,12 +84,7 @@
 
 .figma-mock-exam-unavailable__icon-slot img {
   display: block;
-  height: 100%;
-  left: 0;
   max-width: none;
-  position: absolute;
-  top: 0;
-  width: 100%;
 }
 
 .figma-mock-exam-unavailable__header {
@@ -111,8 +103,10 @@
   background: var(--figma-mock-surface);
   border: none;
   border-radius: 10px;
+  cursor: pointer;
   display: flex;
   flex-shrink: 0;
+  font: inherit;
   height: 32px;
   justify-content: center;
   padding: 0;
@@ -275,8 +269,10 @@
   border: 1px solid transparent;
   border-radius: 14px;
   box-sizing: border-box;
+  cursor: pointer;
   display: flex;
   flex-shrink: 0;
+  font: inherit;
   gap: 10px;
   height: 54px;
   justify-content: center;
@@ -294,11 +290,16 @@
 }
 
 .figma-mock-exam-unavailable__secondary-link {
+  background: none;
+  border: none;
   color: var(--figma-mock-accent);
+  cursor: pointer;
+  font: inherit;
   font-size: 13px;
   font-weight: 400;
   line-height: normal;
   margin: 0;
+  padding: 0;
   text-align: center;
   width: 100%;
 }
