@@ -1,12 +1,18 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { studyApp } from './app/study-app.ts'
 import { useOnline } from './hooks/useOnline.ts'
 import {
-  ACTIVE_CATEGORY,
   DEFAULT_PRACTICE_FILTERS,
   type PracticeFilters,
   type QuestionRecord,
 } from './domain/types.ts'
+import {
+  PracticeMistakesView,
+  PracticeQuestionView,
+  PracticeSetupView,
+  practiceDepsFromStudyApp,
+  usePracticeSession,
+} from './practice/index.ts'
 import {
   VIEW_HOME,
   VIEW_IMPORT,
@@ -15,11 +21,8 @@ import {
   VIEW_PRACTICE_SETUP,
   type AppView,
 } from './ui/navigation.ts'
-import { HomeView } from './ui/views/HomeView.tsx'
-import { ImportView } from './ui/views/ImportView.tsx'
-import { MistakesView } from './ui/views/MistakesView.tsx'
-import { PracticeQuestionView } from './ui/views/PracticeQuestionView.tsx'
-import { PracticeSetupView } from './ui/views/PracticeSetupView.tsx'
+import { Home } from './ui/views/Home.tsx'
+import { Import } from './ui/views/Import.tsx'
 
 function App() {
   const online = useOnline()
@@ -31,6 +34,9 @@ function App() {
   )
   const [, tick] = useState(0)
 
+  const practiceDeps = useMemo(() => practiceDepsFromStudyApp(studyApp), [])
+  const { pickQuestion } = usePracticeSession(practiceDeps, filters)
+
   const refresh = useCallback(() => tick((n) => n + 1), [])
 
   useEffect(() => {
@@ -40,20 +46,6 @@ function App() {
       setReady(true)
     })()
   }, [])
-
-  const pickQuestion = useCallback(
-    (exclude?: string): QuestionRecord | null => {
-      const progressMap = studyApp.progress.asMap(ACTIVE_CATEGORY)
-      const candidates = studyApp.bank.filterPracticeCandidates(
-        ACTIVE_CATEGORY,
-        filters,
-        progressMap,
-        studyApp.hasImageOnDevice,
-      )
-      return studyApp.bank.pickRandom(candidates, exclude)
-    },
-    [filters],
-  )
 
   const startPractice = () => {
     const q = pickQuestion()
@@ -89,7 +81,7 @@ function App() {
   switch (view) {
     case VIEW_IMPORT:
       content = (
-        <ImportView
+        <Import
           online={online}
           onBack={() => {
             setView(VIEW_HOME)
@@ -122,7 +114,7 @@ function App() {
     case VIEW_PRACTICE:
       content = currentQuestion ? (
         <PracticeQuestionView
-          app={studyApp}
+          deps={practiceDeps}
           question={currentQuestion}
           onNext={handleNext}
           onBack={() => {
@@ -135,10 +127,9 @@ function App() {
       break
     case VIEW_MISTAKES:
       content = (
-        <MistakesView
-          progress={studyApp.progress}
-          getQuestion={(n) => studyApp.bank.getByNumber(n)}
-          onOpen={(q) => {
+        <PracticeMistakesView
+          deps={practiceDeps}
+          onOpenQuestion={(q) => {
             setCurrentQuestion(q)
             setView(VIEW_PRACTICE)
           }}
@@ -149,7 +140,7 @@ function App() {
     case VIEW_HOME:
     default:
       content = (
-        <HomeView
+        <Home
           bank={studyApp.bank}
           progress={studyApp.progress}
           hasImageOnDevice={studyApp.hasImageOnDevice}

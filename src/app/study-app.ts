@@ -108,3 +108,19 @@ export class StudyApp {
 }
 
 export const studyApp = new StudyApp()
+
+/** Polish label for catalog Last-Modified / import metadata (UI). */
+export function formatCatalogDateLabel(isoOrHttpDate: string | null): string {
+  if (!isoOrHttpDate) {
+    return 'nieznana'
+  }
+  const parsed = Date.parse(isoOrHttpDate)
+  if (Number.isNaN(parsed)) {
+    return isoOrHttpDate
+  }
+  return new Intl.DateTimeFormat('pl-PL', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  }).format(parsed)
+}
