@@ -1,40 +1,32 @@
-# TypeScript fullstack Cloud Agent environment
+# Nauka prawa jazdy (kat. B) — faza 1
 
-This repository ships a Cloud Agent environment with a broad TypeScript fullstack toolchain preinstalled.
+Lokalna aplikacja PWA (TypeScript, Vite, React). Oficjalny katalog Excel pobierasz z [gov.pl](https://www.gov.pl/web/infrastruktura/prawo-jazdy) w przeglądarce; pytania i postęp zostają na urządzeniu (IndexedDB). Repozytorium **nie** zawiera treści pytań ani multimediów z katalogu.
 
-## Toolchain (defaults)
-
-| Area | Tools |
-| --- | --- |
-| Node | **26.13.0** default (`/usr/local`), plus nvm **24** and **22** for switching |
-| Package managers | npm, Yarn Classic, pnpm |
-| Runtimes | Bun, Deno |
-| JS/TS CLIs | TypeScript, tsx, ESLint, Prettier, Turbo, Nest CLI, Prisma, Vercel CLI, Wrangler, Playwright |
-| Containers | Docker Engine + Compose (`ensure-docker` / boot `start`) |
-| Cloud / infra | AWS CLI v2, kubectl, Terraform |
-| Data clients | `psql`, `redis-cli`, `mongosh`, `sqlite3` |
-| Shell utilities | `fd`, `bat`, `fzf`, HTTPie, `jq`, `rg`, `tree` |
-
-Git is assumed to already be present on the base image and is not reinstalled by this setup.
-
-## Local / agent commands
+## Uruchomienie
 
 ```bash
-# Verify toolchain (also the Cloud Agent install script)
-./scripts/cloud-agent-install.sh
-
-# Ensure Docker is up (also the Cloud Agent start script)
-./scripts/cloud-agent-start.sh
+npm install
+npm run dev
 ```
 
-Switch Node with nvm when needed:
+Otwórz adres z terminala (domyślnie `http://localhost:5173`).
+
+## Weryfikacja
 
 ```bash
-source ~/.nvm/nvm.sh
-nvm use 24   # or 22 / 26
+npm run typecheck
+npm test
+npm run build
 ```
 
-## Notes
+## Zakres fazy 1
 
-- Prefer project-local dependencies over globals for app work; globals are for scaffolding and one-off CLIs.
-- Docker may need `./scripts/cloud-agent-start.sh` (or `ensure-docker`) after boot.
+- Kategoria **B** (pozostałe kody widoczne, zablokowane)
+- Import katalogu (`katalog` z oficjalnego xlsx; bez arkusza weryfikacji)
+- Ćwiczenia: jedno pytanie, filtry, natychmiastowy wynik, lista błędów
+- JPEG z pamięci urządzenia; WMV / brak pliku — komunikat, bez zaliczania „na ślepo”
+- Egzamin próbny — **poza** tym slice’em
+
+## Cloud Agent toolchain
+
+Zobacz sekcję w poprzedniej wersji README dotyczącą `./scripts/cloud-agent-install.sh` i `./scripts/cloud-agent-start.sh`.

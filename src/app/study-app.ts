@@ -1,0 +1,110 @@
+import {
+  mergeQuestionsByNumber,
+  parseWorkbookBuffer,
+} from '../domain/import-catalog.ts'
+import { QuestionBank } from '../domain/question-bank.ts'
+import { ProgressStore } from '../domain/progress-store.ts'
+import type { CatalogMeta, ImportStats, QuestionProgress } from '../domain/types.ts'
+import { ACTIVE_CATEGORY } from '../domain/types.ts'
+import {
+  countMediaFiles,
+  deleteProgressEntry,
+  getMediaFile,
+  hasMediaFile,
+  importZipImagesFromFile,
+  loadCatalog,
+  loadProgress,
+  saveCatalog,
+  saveProgressEntry,
+} from '../storage/app-database.ts'
+
+export class StudyApp {
+  readonly bank = new QuestionBank()
+  readonly progress = new ProgressStore()
+  private mediaCache = new Map<string, boolean>()
+
+  async hydrate(): Promise<void> {
+    const catalog = await loadCatalog()
+    if (catalog) {
+      this.bank.load({
+        questions: catalog.questions,
+        catalogFilename: catalog.meta.filename,
+        catalogLastModified: catalog.meta.lastModified,
+      })
+    }
+    this.progress.load(await loadProgress())
+    this.mediaCache.clear()
+  }
+
+  async importWorkbook(
+    buffer: ArrayBuffer,
+    meta: Pick<CatalogMeta, 'filename' | 'lastModified'>,
+  ): Promise<ImportStats> {
+    const parsed = parseWorkbookBuffer(buffer)
+    const existing = this.bank.getSnapshot().questions
+    const merged = mergeQuestionsByNumber(existing, parsed.questions)
+    const catalogMeta: CatalogMeta = {
+      filename: meta.filename,
+      lastModified: meta.lastModified,
+      importedAt: new Date().toISOString(),
+    }
+    await saveCatalog(catalogMeta, merged)
+    this.bank.load({
+      questions: merged,
+      catalogFilename: catalogMeta.filename,
+      catalogLastModified: catalogMeta.lastModified,
+    })
+    const liveNumbers = new Set(
+      merged
+        .filter((q) => q.categories.includes(ACTIVE_CATEGORY))
+        .map((q) => q.number),
+    )
+    const removed = this.progress.reconcileAfterImport(ACTIVE_CATEGORY, liveNumbers)
+    for (const number of removed) {
+      await deleteProgressEntry(number, ACTIVE_CATEGORY)
+    }
+    return parsed.stats
+  }
+
+  async recordAnswer(
+    ...args: Parameters<ProgressStore['recordAnswer']>
+  ): Promise<QuestionProgress> {
+    const updated = this.progress.recordAnswer(...args)
+    await saveProgressEntry(updated)
+    return updated
+  }
+
+  mediaLookup = async (filename: string | null): Promise<Blob | null> => {
+    if (!filename) {
+      return null
+    }
+    return getMediaFile(filename)
+  }
+
+  hasImageOnDevice = (filename: string): boolean => {
+    return this.mediaCache.get(filename) ?? false
+  }
+
+  async refreshMediaIndex(): Promise<number> {
+    this.mediaCache.clear()
+    const catalog = this.bank.getSnapshot().questions
+    for (const q of catalog) {
+      if (q.mediaFilename && q.mediaKind === 'image') {
+        const exists = await hasMediaFile(q.mediaFilename)
+        this.mediaCache.set(q.mediaFilename, exists)
+      }
+    }
+    return countMediaFiles()
+  }
+
+  async importMediaZip(
+    file: File,
+    onProgress?: (n: number) => void,
+  ): Promise<{ stored: number; skipped: number }> {
+    const result = await importZipImagesFromFile(file, onProgress)
+    await this.refreshMediaIndex()
+    return result
+  }
+}
+
+export const studyApp = new StudyApp()
