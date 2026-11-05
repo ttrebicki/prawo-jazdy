@@ -1,18 +1,20 @@
 import { useCallback, useMemo, useState } from 'react'
-import { formatCatalogDateLabel } from '../../app/study-app.ts'
-import { ACTIVE_CATEGORY } from '../../domain/types.ts'
 import {
   MOCK_EXAM_LOCK_REASON,
   START_LOCKED_CATEGORY_CODES,
   START_LOCKED_CATEGORY_REASON,
 } from './lockedCategories.ts'
+import {
+  START_SAMPLE_CATALOG_LINE_ONE,
+  START_SAMPLE_CATALOG_LINE_TWO,
+  START_SAMPLE_MISTAKES,
+  START_SAMPLE_PRACTICE_ANSWERS,
+} from './sampleCopy.ts'
 import './start.css'
 import { getStartThemeAssets, type StartTheme } from './themeAssets.ts'
 import type { StartScreenProps } from './types.ts'
 
 const THEME_STORAGE_KEY = 'figma-start-theme'
-
-const countFormat = new Intl.NumberFormat('pl-PL')
 
 function readStoredTheme(fallback: StartTheme): StartTheme {
   if (typeof window === 'undefined') {
@@ -20,15 +22,6 @@ function readStoredTheme(fallback: StartTheme): StartTheme {
   }
   const stored = window.localStorage.getItem(THEME_STORAGE_KEY)
   return stored === 'dark' || stored === 'light' ? stored : fallback
-}
-
-function countPracticeAnswers(
-  progress: StartScreenProps['progress'],
-  category: typeof ACTIVE_CATEGORY,
-): number {
-  return progress
-    .dump(category)
-    .reduce((sum, entry) => sum + entry.timesSeen, 0)
 }
 
 interface IconProps {
@@ -45,44 +38,23 @@ function StartIcon({ src, sizeClass }: IconProps) {
 }
 
 export function StartScreen({
-  bank,
-  progress,
-  hasImageOnDevice,
+  bank: _bank,
+  progress: _progress,
+  hasImageOnDevice: _hasImageOnDevice,
   onPractice,
   onMistakes,
   onImport,
   onImportMedia,
   initialTheme = 'light',
 }: StartScreenProps) {
+  void _bank
+  void _progress
+  void _hasImageOnDevice
+
   const [theme, setTheme] = useState<StartTheme>(() =>
     readStoredTheme(initialTheme),
   )
   const assets = useMemo(() => getStartThemeAssets(theme), [theme])
-
-  const hasCatalog = bank.hasCatalog()
-  const meta = bank.getCatalogMeta()
-  const totalB = bank.countByCategory(ACTIVE_CATEGORY)
-  const missingMedia = bank.countMissingDisplayableMedia(
-    ACTIVE_CATEGORY,
-    hasImageOnDevice,
-  )
-  const mistakes = progress.countMistakes(ACTIVE_CATEGORY)
-  const practiceAnswers = countPracticeAnswers(progress, ACTIVE_CATEGORY)
-
-  const catalogLineOne = useMemo(() => {
-    if (!hasCatalog) {
-      return 'Brak katalogu na urządzeniu'
-    }
-    const dateLabel = formatCatalogDateLabel(meta.lastModified)
-    return `katalog z ${dateLabel}`
-  }, [hasCatalog, meta.lastModified])
-
-  const catalogLineTwo = useMemo(() => {
-    if (!hasCatalog) {
-      return 'Zaimportuj oficjalny plik, aby rozpocząć naukę'
-    }
-    return `${countFormat.format(totalB)} pytań B · ${countFormat.format(missingMedia)} bez użytecznych mediów`
-  }, [hasCatalog, missingMedia, totalB])
 
   const toggleTheme = useCallback(() => {
     setTheme((current) => {
@@ -93,8 +65,6 @@ export function StartScreen({
   }, [])
 
   const openMediaImport = onImportMedia ?? onImport
-
-  const mistakesDisabled = !hasCatalog || mistakes === 0
 
   return (
     <div className="figma-start" data-theme={theme}>
@@ -168,7 +138,6 @@ export function StartScreen({
           <button
             type="button"
             className="figma-start__practice-btn"
-            disabled={!hasCatalog}
             onClick={onPractice}
           >
             Ćwicz
@@ -180,11 +149,9 @@ export function StartScreen({
 
           <div className="figma-start__stats">
             <p className="figma-start__stats-muted">
-              {countFormat.format(practiceAnswers)} odpowiedzi w ćwiczeniach
+              {START_SAMPLE_PRACTICE_ANSWERS}
             </p>
-            <p className="figma-start__stats-strong">
-              {countFormat.format(mistakes)} błędów
-            </p>
+            <p className="figma-start__stats-strong">{START_SAMPLE_MISTAKES}</p>
           </div>
 
           <hr className="figma-start__divider" />
@@ -203,7 +170,6 @@ export function StartScreen({
             <button
               type="button"
               className="figma-start__mode figma-start__mode--accent"
-              disabled={mistakesDisabled}
               onClick={onMistakes}
             >
               <StartIcon
@@ -227,8 +193,8 @@ export function StartScreen({
             </button>
           </div>
           <div className="figma-start__catalog-meta">
-            <p>{catalogLineOne}</p>
-            <p>{catalogLineTwo}</p>
+            <p>{START_SAMPLE_CATALOG_LINE_ONE}</p>
+            <p>{START_SAMPLE_CATALOG_LINE_TWO}</p>
           </div>
           <button
             type="button"
