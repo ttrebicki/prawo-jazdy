@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useFigmaLayoutOptional } from '../../layout/FigmaLayoutContext.tsx'
 import {
   getCorrectAnswerKey,
   type UserAnswer,
@@ -106,6 +107,107 @@ export function FigmaPracticeQuestionView({
   const footnote = revealed
     ? 'Wynik dotyczy wyłącznie treści pokazowej.'
     : 'To ćwiczenie demonstracyjne, nie pytanie egzaminacyjne.'
+
+  const layout = useFigmaLayoutOptional()
+  const themeClass = theme === 'dark' ? 'fp--dark' : 'fp--light'
+
+  if (layout?.isWide) {
+    return (
+      <div
+        className={`figma-wide__content fp-wide-themed ${themeClass}`}
+        data-node-id={layout.isDesktop ? '15:12559' : '15:13531'}
+        data-name={
+          layout.isDesktop
+            ? 'Desktop · Ćwiczenia · przed odpowiedzią'
+            : 'Tablet · Ćwiczenia · przed odpowiedzią'
+        }
+      >
+        <div className="figma-wide__practice-head">
+          <h1 className="figma-wide__practice-title">Ćwiczenia</h1>
+          <button type="button" className="figma-wide__practice-back" onClick={onBack}>
+            Wróć na start
+          </button>
+        </div>
+
+        <PracticeMetaProgress
+          questionLabel={formatQuestionLabel(question.number)}
+          progressLabel={`${questionIndex} z ${questionTotal}`}
+          progressRatio={progressRatio}
+        />
+
+        <div className="figma-wide__practice-grid">
+          <div className="figma-wide__practice-main">
+            {hasMediaArea ? (
+              <PracticeMediaCard assets={assets} mediaUrl={mediaUrl} />
+            ) : (
+              <PracticeTextOnlyHint assets={assets} />
+            )}
+
+            <PracticeQuestionCopy prompt={question.prompt} />
+
+            <PracticeAnswerList
+              question={question}
+              assets={assets}
+              mode={revealed ? 'review' : 'pick'}
+              selected={pendingAnswer}
+              picked={picked}
+              correctKey={correctKey}
+              onSelect={revealed ? undefined : setPendingAnswer}
+            />
+
+            {revealed && picked !== null ? (
+              <PracticeResultBlock
+                isCorrect={picked === correctKey}
+                correctKey={correctKey}
+              />
+            ) : null}
+          </div>
+
+          <aside className="figma-wide__practice-side">
+            {showWhyExpanded ? (
+              <PracticeWhyPanel
+                assets={assets}
+                text={explanationText}
+                expanded
+                onToggle={whyToggle}
+              />
+            ) : (
+              <PracticeWhyPanel
+                assets={assets}
+                text={explanationText}
+                expanded={false}
+                onToggle={() => setWhyExpanded(true)}
+              />
+            )}
+
+            <button
+              type="button"
+              className="fp-primary-action"
+              disabled={!revealed && pendingAnswer === null}
+              onClick={() => {
+                if (revealed) {
+                  onNext(question)
+                  return
+                }
+                void submit()
+              }}
+            >
+              {revealed ? (
+                <>
+                  Następne pytanie
+                  <img className="fp-icon fp-icon--18" src={assets.arrowRight} alt="" />
+                </>
+              ) : (
+                'Sprawdź odpowiedź'
+              )}
+            </button>
+
+            <p className="fp-footnote">{footnote}</p>
+          </aside>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <PracticeFrame theme={theme} onBack={onBack}>

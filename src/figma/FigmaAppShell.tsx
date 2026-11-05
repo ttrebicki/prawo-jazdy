@@ -42,9 +42,7 @@ export function FigmaAppShell({
       <div className="figma-app-shell" data-theme={theme}>
         <div className="figma-shell-mobile">{children}</div>
         <div className="figma-shell-wide">
-          <FigmaWideChrome>
-            <div className="figma-wide__embedded">{children}</div>
-          </FigmaWideChrome>
+          <FigmaWideChrome>{children}</FigmaWideChrome>
         </div>
       </div>
     </FigmaLayoutProvider>

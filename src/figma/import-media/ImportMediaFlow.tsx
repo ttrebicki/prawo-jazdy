@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import { useFigmaLayoutOptional } from '../layout/FigmaLayoutContext.tsx'
+import { MediaImportWideResultScreen } from './MediaImportWideResultScreen.tsx'
 import { buildMediaImportResultViewModel } from './build-result-view-model.ts'
 import { MediaImportBeforeScreen } from './MediaImportBeforeScreen.tsx'
 import { MediaImportWideBeforeScreen } from './MediaImportWideBeforeScreen.tsx'
@@ -149,7 +150,7 @@ export function ImportMediaFlow({
         {fileInput}
         {phase === 'before' && <MediaImportWideBeforeScreen {...beforeProps} />}
         {phase === 'result' && result && (
-          <MediaImportResultScreen
+          <MediaImportWideResultScreen
             onStartPractice={onStartPractice}
             onBackToStart={onBackToStart}
           />

@@ -3,12 +3,14 @@ import {
   IconBookOpenCheck,
   IconCheckDouble,
 } from './icons.tsx'
+import { useFigmaLayoutOptional } from '../layout/FigmaLayoutContext.tsx'
 import {
   FIGMA_IMPORT_WORKBOOK_SAMPLE_FOOTNOTE,
   FIGMA_IMPORT_WORKBOOK_SAMPLE_RESULT_ROWS,
 } from './figmaSampleResult.ts'
 import { ImportWorkbookPrivacyFooter } from './ImportWorkbookPrivacyFooter.tsx'
 import { ImportWorkbookShell } from './ImportWorkbookShell.tsx'
+import { ImportWorkbookWideResultView } from './ImportWorkbookWideResultView.tsx'
 
 export interface ImportWorkbookResultViewProps {
   busy: boolean
@@ -17,12 +19,14 @@ export interface ImportWorkbookResultViewProps {
   onGoToPractice: () => void
 }
 
-export function ImportWorkbookResultView({
-  busy,
-  onBack,
-  onContinueToMedia,
-  onGoToPractice,
-}: ImportWorkbookResultViewProps) {
+export function ImportWorkbookResultView(props: ImportWorkbookResultViewProps) {
+  const { busy, onBack, onContinueToMedia, onGoToPractice } = props
+  const layout = useFigmaLayoutOptional()
+
+  if (layout?.isWide) {
+    return <ImportWorkbookWideResultView {...props} />
+  }
+
   return (
     <ImportWorkbookShell title="Import katalogu" onBack={onBack}>
       <div className="import-wb__success-icon" data-node-id="5:3542">

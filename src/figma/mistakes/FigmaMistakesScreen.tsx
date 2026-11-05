@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useFigmaLayoutOptional } from '../layout/FigmaLayoutContext.tsx'
 import type { ProgressStore } from '../../domain/progress-store.ts'
 import type { CategoryCode, QuestionRecord } from '../../domain/types.ts'
 import {
@@ -13,6 +14,7 @@ import { demoQuestionLabel } from './placeholders.ts'
 import moreHorizontalUrl from './assets/more-horizontal.svg'
 import rotateCcwUrl from './assets/rotate-ccw.svg'
 import smartphoneUrl from './assets/smartphone.svg'
+import { FigmaMistakesWideScreen } from './FigmaMistakesWideScreen.tsx'
 
 const INITIAL_VISIBLE = 4
 
@@ -24,13 +26,14 @@ export interface FigmaMistakesScreenProps {
   category?: CategoryCode
 }
 
-export function FigmaMistakesScreen({
-  progress,
-  getQuestion,
-  onOpenQuestion,
-  onBack,
-  category = 'B',
-}: FigmaMistakesScreenProps) {
+export function FigmaMistakesScreen(props: FigmaMistakesScreenProps) {
+  const {
+    progress,
+    getQuestion,
+    onOpenQuestion,
+    onBack,
+    category = 'B',
+  } = props
   const [showAll, setShowAll] = useState(false)
 
   const mistakeRows = useMemo(() => {
@@ -60,6 +63,11 @@ export function FigmaMistakesScreen({
   const listDate = formatListDate(mistakeRows[0]?.answeredAt)
   const visibleRows = showAll ? mistakeRows : mistakeRows.slice(0, INITIAL_VISIBLE)
   const hiddenCount = Math.max(mistakeRows.length - INITIAL_VISIBLE, 0)
+
+  const layout = useFigmaLayoutOptional()
+  if (layout?.isWide) {
+    return <FigmaMistakesWideScreen {...props} />
+  }
 
   return (
     <div className="figma-mistakes-root" data-node-id="5:3832">
