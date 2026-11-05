@@ -120,3 +120,106 @@ export const DEFAULT_PRACTICE_FILTERS: PracticeFilters = {
   onlyWithPhoto: false,
   onlyMissingFile: false,
 }
+
+/** Canonical names exported from `index.ts` for cross-package use. */
+export type Scope = QuestionScope
+
+export type QuestionKind = 'yes-no' | 'abc'
+
+export type AnswerKey = BasicKey | SpecialistKey
+
+export interface QuestionAnswers {
+  a: string
+  b: string
+  c: string
+}
+
+export interface Question {
+  officialNumber: string
+  catalogFilename: string
+  catalogModifiedAt: string | null
+  scope: Scope
+  points: 1 | 2 | 3
+  categories: CategoryCode[]
+  kind: QuestionKind
+  prompt: string
+  answers: QuestionAnswers | null
+  key: AnswerKey
+  mediaFilename: string | null
+  mediaKind: MediaKind
+}
+
+export type MediaMissingReason =
+  | 'none_needed'
+  | 'available'
+  | 'missing_file'
+  | 'video_wmv'
+
+export interface ResolvedMedia {
+  kind: MediaKind
+  reason: MediaMissingReason
+  blob: Blob | null
+  filename: string | null
+}
+
+export interface QuestionCatalogMeta {
+  catalogFilename: string
+  catalogModifiedAt: string | null
+}
+
+export interface QuestionListFilter {
+  category: CategoryCode
+  scope?: Scope
+  points?: 1 | 2 | 3
+}
+
+export interface RecordAnswerParams {
+  officialNumber: string
+  category: CategoryCode
+  userKey: AnswerKey
+  correctKey: AnswerKey
+  mediaViewable: boolean
+  answeredAt?: string
+}
+
+export interface StudyProgress {
+  officialNumber: string
+  category: CategoryCode
+  timesSeen: number
+  timesCorrect: number
+  lastOutcome: LastOutcome
+  lastAnsweredAt: string | null
+}
+
+export interface ExamSession {
+  id: string
+  category: CategoryCode
+  mode: 'practice' | 'exam'
+  officialNumbers: string[]
+  finishedAt: string | null
+}
+
+export interface QuestionBank {
+  setCatalog(questions: Question[], meta: QuestionCatalogMeta): void
+  listQuestions(filter: QuestionListFilter): Question[]
+  getByOfficialNumber(officialNumber: string): Question | undefined
+  resolveMedia(
+    question: Question,
+    hasFileOnDevice: (filename: string) => boolean,
+  ): ResolvedMedia
+}
+
+export interface ProgressStore {
+  recordAnswer(params: RecordAnswerParams): StudyProgress
+  getProgress(
+    officialNumber: string,
+    category: CategoryCode,
+  ): StudyProgress | undefined
+  listMistakes(category: CategoryCode): StudyProgress[]
+  listPastPapers(category: CategoryCode): ExamSession[]
+  reconcileAfterImport(
+    category: CategoryCode,
+    liveOfficialNumbers: ReadonlySet<string>,
+  ): string[]
+}
+
