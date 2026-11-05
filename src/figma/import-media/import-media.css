@@ -328,23 +328,12 @@
   color: var(--figma-muted);
 }
 
-.figma-import-media__progress {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.figma-import-media__progress-track {
-  height: 0.5rem;
-  border-radius: 999px;
-  background: var(--figma-border);
-  overflow: hidden;
-}
-
-.figma-import-media__progress-fill {
-  height: 100%;
-  background: var(--figma-accent);
-  transition: width 0.2s ease;
+.figma-import-media__step-hint {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--figma-muted);
+  text-align: center;
 }
 
 .figma-import-media__error {
@@ -355,6 +344,20 @@
   color: #ad453d;
   font-size: 0.875rem;
   line-height: 1.4;
+}
+
+.figma-import-media__error p {
+  margin: 0;
+}
+
+.figma-import-media__error-links {
+  margin-top: 0.5rem !important;
+  word-break: break-word;
+}
+
+.figma-import-media__error-links a {
+  color: inherit;
+  font-weight: 600;
 }
 
 .figma-app-shell[data-theme='dark'] .figma-import-media__error {

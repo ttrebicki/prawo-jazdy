@@ -1,4 +1,8 @@
 import {
+  OFFICIAL_MEDIA_ZIP_URL,
+  OFFICIAL_PAGE_URL,
+} from '../../domain/constants.ts'
+import {
   FIGMA_BEFORE_ARCHIVE_SIZE,
   FIGMA_BEFORE_SIZE_NOTE,
 } from './figma-display-copy.ts'
@@ -15,9 +19,10 @@ interface MediaImportBeforeScreenProps {
   busy: boolean
   online: boolean
   statusMessage: string | null
-  progressPercent: number | null
   error: string | null
-  onBeginDownload: () => void
+  showOfficialUrlHint: boolean
+  onBrowserDownload: () => void
+  onPickFile: () => void
   onSkip: () => void
 }
 
@@ -25,9 +30,10 @@ export function MediaImportBeforeScreen({
   busy,
   online,
   statusMessage,
-  progressPercent,
   error,
-  onBeginDownload,
+  showOfficialUrlHint,
+  onBrowserDownload,
+  onPickFile,
   onSkip,
 }: MediaImportBeforeScreenProps) {
   return (
@@ -40,7 +46,9 @@ export function MediaImportBeforeScreen({
           Zachowaj spokój.
         </h2>
         <p className="figma-import-media__lead">
-          Zdjęcia i klipy zapiszą się na telefonie. Katalog pytań pozostanie bez zmian.
+          Najpierw pobierz archiwum przez przeglądarkę (duży plik — bez przerw może
+          trwać godzinami). Potem wskaż ten sam plik ZIP, aby zapisać zdjęcia w
+          aplikacji.
         </p>
       </div>
 
@@ -70,37 +78,35 @@ export function MediaImportBeforeScreen({
         <div>
           <p className="figma-import-media__callout-title">Najlepiej przez Wi-Fi</p>
           <p className="figma-import-media__callout-body">
-            To duży plik. Możesz pominąć pobieranie i wrócić do niego z ekranu startowego.
+            Pobieranie prowadzi Chrome lub system operacyjny — aplikacja nie trzyma
+            transferu w tle.
           </p>
         </div>
       </div>
 
-      {(statusMessage || progressPercent !== null) && (
-        <div className="figma-import-media__progress" aria-live="polite">
-          {statusMessage && (
-            <p className="figma-import-media__status">{statusMessage}</p>
-          )}
-          {progressPercent !== null && (
-            <div
-              className="figma-import-media__progress-track"
-              role="progressbar"
-              aria-valuemin={0}
-              aria-valuemax={100}
-              aria-valuenow={progressPercent}
-            >
-              <div
-                className="figma-import-media__progress-fill"
-                style={{ width: `${progressPercent}%` }}
-              />
-            </div>
-          )}
-        </div>
+      {statusMessage && (
+        <p className="figma-import-media__status" aria-live="polite">
+          {statusMessage}
+        </p>
       )}
 
       {error && (
-        <p className="figma-import-media__error" role="alert">
-          {error}
-        </p>
+        <div className="figma-import-media__error" role="alert">
+          <p>{error}</p>
+          {showOfficialUrlHint && (
+            <p className="figma-import-media__error-links">
+              Oficjalne archiwum:{' '}
+              <a href={OFFICIAL_MEDIA_ZIP_URL} target="_blank" rel="noreferrer">
+                {OFFICIAL_MEDIA_ZIP_URL}
+              </a>
+              <br />
+              Strona Ministerstwa:{' '}
+              <a href={OFFICIAL_PAGE_URL} target="_blank" rel="noreferrer">
+                {OFFICIAL_PAGE_URL}
+              </a>
+            </p>
+          )}
+        </div>
       )}
 
       <div className="figma-import-media__actions">
@@ -108,14 +114,26 @@ export function MediaImportBeforeScreen({
           type="button"
           className="figma-import-media__btn figma-import-media__btn--primary"
           disabled={busy || !online}
-          onClick={onBeginDownload}
+          onClick={onBrowserDownload}
         >
-          {busy ? 'Pobieranie…' : 'Rozpocznij pobieranie'}
+          Rozpocznij pobieranie
           <IconDownload />
         </button>
         <button
           type="button"
           className="figma-import-media__btn figma-import-media__btn--secondary"
+          disabled={busy}
+          onClick={onPickFile}
+        >
+          Wskaż plik ZIP z dysku
+        </button>
+        <p className="figma-import-media__step-hint">
+          Po pobraniu wybierz ten sam plik .zip albo wskaż kopię zapisana wcześniej na
+          urządzeniu.
+        </p>
+        <button
+          type="button"
+          className="figma-import-media__btn figma-import-media__btn--ghost"
           disabled={busy}
           onClick={onSkip}
         >

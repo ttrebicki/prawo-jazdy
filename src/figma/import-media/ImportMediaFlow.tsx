@@ -1,9 +1,13 @@
-import { useState } from 'react'
-import { MEDIA_ZIP_SIZE_LABEL } from '../../domain/constants.ts'
+import { useRef, useState } from 'react'
 import { buildMediaImportResultViewModel } from './build-result-view-model.ts'
 import { MediaImportBeforeScreen } from './MediaImportBeforeScreen.tsx'
 import { MediaImportResultScreen } from './MediaImportResultScreen.tsx'
 import { MediaImportShell } from './MediaImportShell.tsx'
+import {
+  isMediaZipFile,
+  mediaZipValidationError,
+  OFFICIAL_MEDIA_ZIP_URL,
+} from './media-zip-file.ts'
 import type { MediaImportProgressUpdate } from './run-media-import-save.ts'
 import type {
   MediaImportResultViewModel,
@@ -14,7 +18,6 @@ import './import-media.css'
 
 export interface ImportMediaFlowProps {
   online: boolean
-  archiveSizeLabel?: string
   onBack: () => void
   onSkipPractice: () => void
   onStartPractice: () => void
@@ -28,7 +31,6 @@ export interface ImportMediaFlowProps {
 
 export function ImportMediaFlow({
   online,
-  archiveSizeLabel = MEDIA_ZIP_SIZE_LABEL,
   onBack,
   onSkipPractice,
   onStartPractice,
@@ -36,36 +38,32 @@ export function ImportMediaFlow({
   onSave,
   onError,
 }: ImportMediaFlowProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const [phase, setPhase] = useState<'before' | 'result'>('before')
   const [busy, setBusy] = useState(false)
   const [statusMessage, setStatusMessage] = useState<string | null>(null)
-  const [progressPercent, setProgressPercent] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [officialUrlHint, setOfficialUrlHint] = useState(false)
   const [result, setResult] = useState<MediaImportResultViewModel | null>(null)
 
-  const reportError = (message: string | null) => {
+  const reportError = (message: string | null, showOfficialUrl = false) => {
     setError(message)
+    setOfficialUrlHint(showOfficialUrl)
     onError?.(message)
   }
 
-  const handleSave = async () => {
+  const importZipFile = async (file: File) => {
     setBusy(true)
     reportError(null)
-    setProgressPercent(0)
-    setStatusMessage(`Pobieranie archiwum (${archiveSizeLabel})…`)
+    setStatusMessage(`Import z archiwum: ${file.name}`)
     try {
-      const payload: MediaImportSavePayload = { kind: 'download' }
-      await onSave(payload, (update) => {
+      await onSave({ kind: 'file', file }, (update) => {
         setStatusMessage(update.message)
-        setProgressPercent(
-          update.percent === undefined ? null : update.percent,
-        )
       })
       const viewModel = buildMediaImportResultViewModel()
       setResult(viewModel)
       setPhase('result')
       setStatusMessage(null)
-      setProgressPercent(null)
     } catch (e) {
       reportError(
         e instanceof Error
@@ -73,13 +71,12 @@ export function ImportMediaFlow({
           : 'Import multimediów nie powiódł się. Poprzednie pliki pozostają.',
       )
       setStatusMessage(null)
-      setProgressPercent(null)
     } finally {
       setBusy(false)
     }
   }
 
-  const handleBeginDownload = () => {
+  const handleBrowserDownload = () => {
     if (busy) {
       return
     }
@@ -87,19 +84,59 @@ export function ImportMediaFlow({
       reportError('Brak sieci. Pobieranie archiwum wymaga połączenia.')
       return
     }
-    void handleSave()
+    reportError(null)
+    setStatusMessage(
+      'Pobieranie uruchamia przeglądarka (Chrome / system). Gdy plik będzie na dysku, wskaż go poniżej.',
+    )
+    const anchor = document.createElement('a')
+    anchor.href = OFFICIAL_MEDIA_ZIP_URL
+    anchor.rel = 'noopener noreferrer'
+    anchor.download = 'multimedia_do_pytan.zip'
+    document.body.appendChild(anchor)
+    anchor.click()
+    anchor.remove()
+  }
+
+  const handlePickFile = (file: File | undefined) => {
+    if (!file || busy) {
+      return
+    }
+    if (!isMediaZipFile(file)) {
+      reportError(mediaZipValidationError(file.name), true)
+      setStatusMessage(null)
+      return
+    }
+    void importZipFile(file)
+  }
+
+  const openFilePicker = () => {
+    if (busy) {
+      return
+    }
+    fileInputRef.current?.click()
   }
 
   return (
     <MediaImportShell onBack={onBack}>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".zip,application/zip,application/x-zip-compressed"
+        hidden
+        onChange={(event) => {
+          handlePickFile(event.target.files?.[0])
+          event.target.value = ''
+        }}
+      />
       {phase === 'before' && (
         <MediaImportBeforeScreen
           busy={busy}
           online={online}
           statusMessage={statusMessage}
-          progressPercent={progressPercent}
           error={error}
-          onBeginDownload={handleBeginDownload}
+          showOfficialUrlHint={officialUrlHint}
+          onBrowserDownload={handleBrowserDownload}
+          onPickFile={openFilePicker}
           onSkip={onSkipPractice}
         />
       )}
