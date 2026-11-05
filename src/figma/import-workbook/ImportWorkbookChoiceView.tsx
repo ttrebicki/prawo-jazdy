@@ -1,4 +1,5 @@
 import { useId } from 'react'
+import { useFigmaLayoutOptional } from '../layout/FigmaLayoutContext.tsx'
 import {
   IconArrowRight,
   IconDownload,
@@ -11,6 +12,7 @@ import {
   FIGMA_IMPORT_WORKBOOK_PREVIEW_CALLOUT_BODY,
   FIGMA_IMPORT_WORKBOOK_PREVIEW_CALLOUT_TITLE,
 } from './figmaCopy.ts'
+import { ImportWorkbookWideChoiceView } from './ImportWorkbookWideChoiceView.tsx'
 
 export interface ImportWorkbookChoiceViewProps {
   online: boolean
@@ -32,6 +34,21 @@ export function ImportWorkbookChoiceView({
   onPickFile,
 }: ImportWorkbookChoiceViewProps) {
   const fileInputId = useId()
+  const layout = useFigmaLayoutOptional()
+
+  if (layout?.isWide) {
+    return (
+      <ImportWorkbookWideChoiceView
+        online={online}
+        busy={busy}
+        error={error}
+        status={status}
+        onBack={onBack}
+        onDownloadOfficial={onDownloadOfficial}
+        onPickFile={onPickFile}
+      />
+    )
+  }
 
   return (
     <ImportWorkbookShell title="Import katalogu" onBack={onBack}>

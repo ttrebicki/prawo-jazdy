@@ -401,28 +401,3 @@
   clip: rect(0, 0, 0, 0);
   border: 0;
 }
-
-@media (min-width: 768px) {
-  .import-wb {
-    max-width: none;
-  }
-}
-
-@media (min-width: 1024px) {
-  .import-wb {
-    border: none;
-    border-radius: 0;
-    min-height: auto;
-  }
-
-  .import-wb__header,
-  .import-wb__content {
-    max-width: 640px;
-    margin-inline: auto;
-    width: 100%;
-  }
-
-  .import-wb__content {
-    padding-inline: clamp(2rem, 4vw, 3rem);
-  }
-}

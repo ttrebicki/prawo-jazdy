@@ -1,6 +1,8 @@
 import { useRef, useState } from 'react'
+import { useFigmaLayoutOptional } from '../layout/FigmaLayoutContext.tsx'
 import { buildMediaImportResultViewModel } from './build-result-view-model.ts'
 import { MediaImportBeforeScreen } from './MediaImportBeforeScreen.tsx'
+import { MediaImportWideBeforeScreen } from './MediaImportWideBeforeScreen.tsx'
 import { MediaImportResultScreen } from './MediaImportResultScreen.tsx'
 import { MediaImportShell } from './MediaImportShell.tsx'
 import {
@@ -116,30 +118,50 @@ export function ImportMediaFlow({
     fileInputRef.current?.click()
   }
 
+  const layout = useFigmaLayoutOptional()
+  const fileInput = (
+    <input
+      ref={fileInputRef}
+      type="file"
+      accept=".zip,application/zip,application/x-zip-compressed"
+      hidden
+      onChange={(event) => {
+        handlePickFile(event.target.files?.[0])
+        event.target.value = ''
+      }}
+    />
+  )
+
+  const beforeProps = {
+    busy,
+    online,
+    statusMessage,
+    error,
+    showOfficialUrlHint: officialUrlHint,
+    onBrowserDownload: handleBrowserDownload,
+    onPickFile: openFilePicker,
+    onSkip: onSkipPractice,
+  }
+
+  if (layout?.isWide) {
+    return (
+      <>
+        {fileInput}
+        {phase === 'before' && <MediaImportWideBeforeScreen {...beforeProps} />}
+        {phase === 'result' && result && (
+          <MediaImportResultScreen
+            onStartPractice={onStartPractice}
+            onBackToStart={onBackToStart}
+          />
+        )}
+      </>
+    )
+  }
+
   return (
     <MediaImportShell onBack={onBack}>
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept=".zip,application/zip,application/x-zip-compressed"
-        hidden
-        onChange={(event) => {
-          handlePickFile(event.target.files?.[0])
-          event.target.value = ''
-        }}
-      />
-      {phase === 'before' && (
-        <MediaImportBeforeScreen
-          busy={busy}
-          online={online}
-          statusMessage={statusMessage}
-          error={error}
-          showOfficialUrlHint={officialUrlHint}
-          onBrowserDownload={handleBrowserDownload}
-          onPickFile={openFilePicker}
-          onSkip={onSkipPractice}
-        />
-      )}
+      {fileInput}
+      {phase === 'before' && <MediaImportBeforeScreen {...beforeProps} />}
       {phase === 'result' && result && (
         <MediaImportResultScreen
           onStartPractice={onStartPractice}
