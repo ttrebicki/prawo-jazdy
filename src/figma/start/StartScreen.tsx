@@ -185,7 +185,10 @@ export function StartScreen({
           </div>
         </section>
 
-        <section aria-label="Katalog na telefonie">
+        <section
+          className="figma-start__catalog"
+          aria-label="Katalog na telefonie"
+        >
           <div className="figma-start__catalog-head">
             <p className="figma-start__catalog-title">Katalog na telefonie</p>
             <button
@@ -213,7 +216,10 @@ export function StartScreen({
           </button>
         </section>
 
-        <section aria-labelledby="start-other-categories">
+        <section
+          className="figma-start__categories"
+          aria-labelledby="start-other-categories"
+        >
           <p className="figma-start__section-title" id="start-other-categories">
             Pozostałe kategorie
           </p>

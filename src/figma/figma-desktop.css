@@ -4,12 +4,13 @@
   background: #e8e6e1;
 }
 
-@media (min-width: 960px) {
+.figma-app-shell[data-theme='dark'] {
+  background: #0c0e12;
+}
+
+@media (min-width: 768px) {
   .figma-app-shell {
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    padding: 2rem clamp(1.5rem, 4vw, 3.5rem);
+    padding: clamp(1.25rem, 3vw, 2rem);
   }
 
   .figma-app-shell > .figma-start,
@@ -20,21 +21,63 @@
   .figma-app-shell > .fp {
     width: min(720px, 100%);
     max-width: min(720px, 100%);
+    margin-inline: auto;
     min-height: auto;
-    margin: 0;
-    border-radius: 16px;
-    box-shadow: 0 16px 48px rgb(32 39 48 / 10%);
+    border-radius: 24px;
+    box-shadow: 0 12px 40px rgb(32 39 48 / 8%);
   }
 
-  .figma-app-shell > .fp .fp-frame {
-    min-height: min(88vh, 920px);
+  .figma-app-shell > .figma-mock-frame {
+    width: min(720px, 100%);
+  }
+
+  .figma-app-shell > .fp {
+    --fp-width: min(720px, 100%);
+  }
+}
+
+@media (min-width: 1024px) {
+  .figma-app-shell {
+    padding: clamp(2rem, 4vw, 3rem) clamp(2rem, 7vw, 5rem);
   }
 
   .figma-app-shell > .figma-start,
   .figma-app-shell > .import-wb,
   .figma-app-shell > .figma-import-media,
-  .figma-app-shell > .figma-mistakes-root,
-  .figma-app-shell > .figma-mock-exam-unavailable {
-    min-height: min(88vh, 920px);
+  .figma-app-shell > .figma-mistakes-root {
+    width: min(1080px, 100%);
+    max-width: 1080px;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .figma-app-shell > .figma-start,
+  .figma-app-shell > .import-wb,
+  .figma-app-shell > .figma-import-media,
+  .figma-app-shell > .figma-mistakes-root {
+    border-left: none;
+    border-right: none;
+  }
+
+  .figma-app-shell > .figma-mock-frame {
+    width: min(640px, 100%);
+    box-shadow: none;
+  }
+
+  .figma-app-shell > .fp {
+    width: min(480px, 100%);
+    max-width: 480px;
+    --fp-width: min(480px, 100%);
+    box-shadow: 0 12px 40px rgb(32 39 48 / 8%);
+    border-radius: 24px;
+    overflow: hidden;
+  }
+
+  .figma-start__home-indicator-row,
+  .fp-home-indicator-row,
+  .figma-mistakes-home-indicator,
+  .figma-mock-exam-unavailable__home-indicator,
+  .import-wb__home-bar {
+    display: none;
   }
 }

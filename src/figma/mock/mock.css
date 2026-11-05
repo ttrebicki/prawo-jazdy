@@ -320,3 +320,19 @@
   height: 5px;
   width: 128px;
 }
+
+@media (min-width: 768px) {
+  .figma-mock-frame {
+    width: min(720px, 100%);
+  }
+}
+
+@media (min-width: 1024px) {
+  .figma-mock-frame {
+    width: min(640px, 100%);
+  }
+
+  .figma-mock-exam-unavailable {
+    border-radius: 20px;
+  }
+}
