@@ -7,6 +7,10 @@ import {
 } from './icons.tsx'
 import { ImportWorkbookPrivacyFooter } from './ImportWorkbookPrivacyFooter.tsx'
 import { ImportWorkbookShell } from './ImportWorkbookShell.tsx'
+import {
+  FIGMA_IMPORT_WORKBOOK_PREVIEW_CALLOUT_BODY,
+  FIGMA_IMPORT_WORKBOOK_PREVIEW_CALLOUT_TITLE,
+} from './figmaCopy.ts'
 
 export interface ImportWorkbookChoiceViewProps {
   online: boolean
@@ -106,10 +110,11 @@ export function ImportWorkbookChoiceView({
           <IconInfo />
         </div>
         <div>
-          <p className="import-wb__callout-title">To podgląd aplikacji</p>
+          <p className="import-wb__callout-title">
+            {FIGMA_IMPORT_WORKBOOK_PREVIEW_CALLOUT_TITLE}
+          </p>
           <p className="import-wb__callout-text">
-            Daty i liczby są przykładowe. Ta makieta nie pobiera katalogu ani nie
-            zawiera oficjalnych pytań.
+            {FIGMA_IMPORT_WORKBOOK_PREVIEW_CALLOUT_BODY}
           </p>
         </div>
       </div>

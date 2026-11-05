@@ -5,6 +5,7 @@ import {
 } from '../../domain/constants.ts'
 import { ImportWorkbookChoiceView } from './ImportWorkbookChoiceView.tsx'
 import { ImportWorkbookResultView } from './ImportWorkbookResultView.tsx'
+import { FIGMA_IMPORT_WORKBOOK_OFFLINE_FILE_HINT } from './figmaCopy.ts'
 import './import-workbook.css'
 
 export interface ImportWorkbookFlowProps {
@@ -64,7 +65,7 @@ export function ImportWorkbookFlow({
 
   const handleDownloadOfficial = useCallback(() => {
     if (!online) {
-      setError('Brak sieci. Wskaż plik Excel zapisany na urządzeniu.')
+      setError(FIGMA_IMPORT_WORKBOOK_OFFLINE_FILE_HINT)
       return
     }
     void runImport(async () => {
