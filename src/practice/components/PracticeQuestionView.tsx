@@ -9,6 +9,7 @@ import { AnswerButtons } from './AnswerButtons.tsx'
 import { ExplanationBlock } from './ExplanationBlock.tsx'
 import { FeedbackPanel } from './FeedbackPanel.tsx'
 import { QuestionMedia } from './QuestionMedia.tsx'
+import { displayExplanationText } from '../explanationMessages.ts'
 import { useQuestionMedia } from '../hooks/useQuestionMedia.ts'
 import type { PracticeDependencies } from '../types.ts'
 
@@ -27,7 +28,9 @@ export function PracticeQuestionView({
 }: PracticeQuestionViewProps) {
   const [picked, setPicked] = useState<UserAnswer | null>(null)
   const [revealed, setRevealed] = useState(false)
-  const [whyText, setWhyText] = useState<string | null>(null)
+  const [storedExplanation, setStoredExplanation] = useState<
+    string | null | undefined
+  >(undefined)
   const [whyExpanded, setWhyExpanded] = useState(false)
 
   const { media, mediaViewable, mediaUrl } = useQuestionMedia(
@@ -39,13 +42,14 @@ export function PracticeQuestionView({
     setPicked(null)
     setRevealed(false)
     setWhyExpanded(false)
+    setStoredExplanation(undefined)
     let cancelled = false
     void deps.getExplanation(question.number).then((text) => {
       if (cancelled) {
         return
       }
       const trimmed = text?.trim()
-      setWhyText(trimmed ? trimmed : null)
+      setStoredExplanation(trimmed ? trimmed : null)
     })
     return () => {
       cancelled = true
@@ -69,7 +73,7 @@ export function PracticeQuestionView({
     })
   }
 
-  const showPreAnswerWhy = !revealed && whyText !== null
+  const explanationReady = storedExplanation !== undefined
 
   return (
     <div className="practice-screen">
@@ -102,14 +106,16 @@ export function PracticeQuestionView({
               disabled={revealed}
               onPick={(answer) => void submit(answer)}
             />
-            {showPreAnswerWhy &&
-              (whyExpanded ? (
-                <ExplanationBlock text={whyText} />
+            {!revealed &&
+              (whyExpanded && explanationReady ? (
+                <ExplanationBlock
+                  text={displayExplanationText(storedExplanation)}
+                />
               ) : (
                 <button
                   type="button"
                   className="practice-btn practice-btn-secondary practice-why-toggle"
-                  aria-expanded={false}
+                  aria-expanded={whyExpanded}
                   onClick={() => setWhyExpanded(true)}
                 >
                   Dlaczego
@@ -122,7 +128,7 @@ export function PracticeQuestionView({
             picked={picked}
             correctKey={correctKey}
             mediaViewable={mediaViewable}
-            whyText={whyText}
+            explanationText={displayExplanationText(storedExplanation ?? null)}
             onContinue={() => onNext(question)}
           />
         )}
