@@ -89,11 +89,21 @@ function App() {
 
   if (!ready) {
     return (
-      <FigmaAppShell theme={theme}>
+      <FigmaAppShell
+        theme={theme}
+        view={VIEW_HOME}
+        mistakeCount={0}
+        onNavigate={setView}
+        onThemeChange={setAppTheme}
+        onPractice={startPractice}
+        onMockExam={() => setView(VIEW_MOCK)}
+      >
         <p className="figma-start__privacy-text">Ładowanie danych z urządzenia…</p>
       </FigmaAppShell>
     )
   }
+
+  const mistakeCount = studyApp.progress.listMistakes('B').length
 
   let content = null
   switch (view) {
@@ -196,7 +206,19 @@ function App() {
       )
   }
 
-  return <FigmaAppShell theme={theme}>{content}</FigmaAppShell>
+  return (
+    <FigmaAppShell
+      theme={theme}
+      view={view}
+      mistakeCount={mistakeCount}
+      onNavigate={setView}
+      onThemeChange={setAppTheme}
+      onPractice={startPractice}
+      onMockExam={() => setView(VIEW_MOCK)}
+    >
+      {content}
+    </FigmaAppShell>
+  )
 }
 
 export default App

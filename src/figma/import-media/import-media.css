@@ -378,32 +378,3 @@
   border-radius: 4px;
   background: var(--figma-text);
 }
-
-@media (min-width: 768px) {
-  .figma-import-media {
-    max-width: none;
-  }
-}
-
-@media (min-width: 1024px) {
-  .figma-import-media {
-    border: none;
-    border-radius: 0;
-    min-height: auto;
-  }
-
-  .figma-import-media__header,
-  .figma-import-media__content {
-    max-width: 640px;
-    margin-inline: auto;
-    width: 100%;
-  }
-
-  .figma-import-media__content {
-    padding-inline: clamp(2rem, 4vw, 3rem);
-  }
-
-  .figma-import-media__home-bar {
-    display: none;
-  }
-}

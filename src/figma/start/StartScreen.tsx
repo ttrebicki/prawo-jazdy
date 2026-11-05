@@ -1,4 +1,5 @@
 import { useCallback, useMemo } from 'react'
+import { useFigmaLayoutOptional } from '../layout/FigmaLayoutContext.tsx'
 import { ACTIVE_CATEGORY } from '../../domain/types.ts'
 import {
   MOCK_EXAM_LOCK_REASON,
@@ -13,6 +14,7 @@ import {
 } from './sampleCopy.ts'
 import './start.css'
 import { getStartThemeAssets } from './themeAssets.ts'
+import { StartWideScreen } from './StartWideScreen.tsx'
 import type { StartScreenProps } from './types.ts'
 
 const countFormat = new Intl.NumberFormat('pl-PL')
@@ -30,19 +32,21 @@ function StartIcon({ src, sizeClass }: IconProps) {
   )
 }
 
-export function StartScreen({
-  bank,
-  progress: _progress,
-  hasImageOnDevice,
-  onPractice,
-  onMistakes,
-  onImport,
-  onImportMedia,
-  onMockExam,
-  theme,
-  onThemeChange,
-}: StartScreenProps) {
+export function StartScreen(props: StartScreenProps) {
+  const {
+    bank,
+    progress: _progress,
+    hasImageOnDevice,
+    onPractice,
+    onMistakes,
+    onImport,
+    onImportMedia,
+    onMockExam,
+    theme,
+    onThemeChange,
+  } = props
   void _progress
+  const layout = useFigmaLayoutOptional()
 
   const assets = useMemo(() => getStartThemeAssets(theme), [theme])
 
@@ -68,6 +72,10 @@ export function StartScreen({
   }, [onThemeChange, theme])
 
   const openMediaImport = onImportMedia ?? onImport
+
+  if (layout?.isWide) {
+    return <StartWideScreen {...props} />
+  }
 
   return (
     <div className="figma-start" data-theme={theme}>

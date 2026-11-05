@@ -1,0 +1,37 @@
+.figma-shell-mobile {
+  display: block;
+  width: 100%;
+}
+
+.figma-shell-wide {
+  display: none;
+  width: 100%;
+}
+
+@media (min-width: 768px) {
+  .figma-shell-mobile {
+    display: none;
+  }
+
+  .figma-shell-wide {
+    display: block;
+  }
+
+  .figma-app-shell {
+    min-height: 100dvh;
+    background: var(--figma-wide-bg, #f5f4f0);
+    padding: 0;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .figma-app-shell {
+    min-height: 100dvh;
+    width: 100%;
+    background: #e8e6e1;
+  }
+
+  .figma-app-shell[data-theme='dark'] {
+    background: #0c0e12;
+  }
+}

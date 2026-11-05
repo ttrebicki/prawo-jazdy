@@ -358,25 +358,3 @@
   border-radius: 4px;
   background: var(--figma-mistakes-text);
 }
-
-@media (min-width: 768px) {
-  .figma-mistakes-root {
-    --figma-mistakes-width: min(720px, 100%);
-  }
-}
-
-@media (min-width: 1024px) {
-  .figma-mistakes-root {
-    --figma-mistakes-width: min(1080px, 100%);
-    --figma-mistakes-radius-shell: 0;
-    border: none;
-    min-height: auto;
-  }
-
-  .figma-mistakes-content {
-    max-width: 720px;
-    margin-inline: auto;
-    width: 100%;
-    padding-inline: clamp(2rem, 4vw, 3rem);
-  }
-}
