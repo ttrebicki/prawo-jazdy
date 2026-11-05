@@ -8,6 +8,26 @@ import type {
 
 export type UserAnswer = BasicKey | SpecialistKey
 
+export type SessionKind = 'practice' | 'exam'
+
+export interface SessionAnswer {
+  number: string
+  userAnswer: UserAnswer
+  correct: boolean
+}
+
+export interface StudySession {
+  id: number
+  kind: SessionKind
+  category: CategoryCode
+  questionNumbers: string[]
+  answers: SessionAnswer[]
+  score: number | null
+  passed: boolean | null
+  startedAt: string
+  finishedAt: string | null
+}
+
 export interface RecordAnswerInput {
   number: string
   category: CategoryCode
@@ -15,13 +35,23 @@ export interface RecordAnswerInput {
   correctAnswer: UserAnswer
   mediaViewable: boolean
   answeredAt?: string
+  sessionId?: number
 }
 
 export class ProgressStore {
   private progress = new Map<string, QuestionProgress>()
+  private sessions: StudySession[] = []
 
   private key(number: string, category: CategoryCode): string {
     return `${category}:${number}`
+  }
+
+  static async openFromIndexedDB(): Promise<ProgressStore> {
+    const { loadProgress, loadSessions } = await import('../storage/app-database.ts')
+    const store = new ProgressStore()
+    store.load(await loadProgress())
+    store.loadSessions(await loadSessions())
+    return store
   }
 
   load(entries: QuestionProgress[]): void {
@@ -29,6 +59,10 @@ export class ProgressStore {
     for (const entry of entries) {
       this.progress.set(this.key(entry.number, entry.category), entry)
     }
+  }
+
+  loadSessions(entries: StudySession[]): void {
+    this.sessions = [...entries].sort((a, b) => b.startedAt.localeCompare(a.startedAt))
   }
 
   dump(category?: CategoryCode): QuestionProgress[] {
@@ -79,6 +113,28 @@ export class ProgressStore {
     }
 
     this.progress.set(this.key(input.number, input.category), updated)
+
+    if (input.sessionId !== undefined) {
+      this.appendSessionAnswer(input.sessionId, {
+        number: input.number,
+        userAnswer: input.userAnswer,
+        correct: isCorrect,
+      })
+    }
+
+    return updated
+  }
+
+  async recordAnswerPersisted(input: RecordAnswerInput): Promise<QuestionProgress> {
+    const updated = this.recordAnswer(input)
+    const { saveProgressEntry, saveSession } = await import('../storage/app-database.ts')
+    await saveProgressEntry(updated)
+    if (input.sessionId !== undefined) {
+      const session = this.sessions.find((row) => row.id === input.sessionId)
+      if (session) {
+        await saveSession(session)
+      }
+    }
     return updated
   }
 
@@ -90,6 +146,77 @@ export class ProgressStore {
       )
   }
 
+  listSessions(category?: CategoryCode): StudySession[] {
+    if (!category) {
+      return [...this.sessions]
+    }
+    return this.sessions.filter((row) => row.category === category)
+  }
+
+  startSession(input: {
+    kind: SessionKind
+    category: CategoryCode
+    questionNumbers: string[]
+  }): StudySession {
+    const session: StudySession = {
+      id: 0,
+      kind: input.kind,
+      category: input.category,
+      questionNumbers: [...input.questionNumbers],
+      answers: [],
+      score: null,
+      passed: null,
+      startedAt: new Date().toISOString(),
+      finishedAt: null,
+    }
+    this.sessions.unshift(session)
+    return session
+  }
+
+  async startSessionPersisted(input: {
+    kind: SessionKind
+    category: CategoryCode
+    questionNumbers: string[]
+  }): Promise<StudySession> {
+    const session = this.startSession(input)
+    const { saveSession } = await import('../storage/app-database.ts')
+    const saved = await saveSession(session)
+    const index = this.sessions.indexOf(session)
+    if (index >= 0) {
+      this.sessions[index] = saved
+    }
+    return saved
+  }
+
+  finishSession(input: {
+    sessionId: number
+    score: number
+    passed: boolean
+  }): StudySession | undefined {
+    const session = this.sessions.find((row) => row.id === input.sessionId)
+    if (!session) {
+      return undefined
+    }
+    session.score = input.score
+    session.passed = input.passed
+    session.finishedAt = new Date().toISOString()
+    return session
+  }
+
+  async finishSessionPersisted(input: {
+    sessionId: number
+    score: number
+    passed: boolean
+  }): Promise<StudySession | undefined> {
+    const session = this.finishSession(input)
+    if (!session) {
+      return undefined
+    }
+    const { saveSession } = await import('../storage/app-database.ts')
+    await saveSession(session)
+    return session
+  }
+
   countSeen(category: CategoryCode): number {
     return this.dump(category).filter((p) => p.timesSeen > 0).length
   }
@@ -98,19 +225,23 @@ export class ProgressStore {
     return this.listMistakes(category).length
   }
 
-  /** Returns official numbers removed from the live catalog. */
+  /**
+   * After a new live catalog import, progress for official numbers no longer in
+   * the bank stays on the device (matched again if the number returns).
+   */
   reconcileAfterImport(
-    category: CategoryCode,
-    liveNumbers: Set<string>,
+    _category: CategoryCode,
+    _liveNumbers: Set<string>,
   ): string[] {
-    const removed: string[] = []
-    for (const entry of this.dump(category)) {
-      if (!liveNumbers.has(entry.number)) {
-        this.progress.delete(this.key(entry.number, category))
-        removed.push(entry.number)
-      }
+    return []
+  }
+
+  private appendSessionAnswer(sessionId: number, answer: SessionAnswer): void {
+    const session = this.sessions.find((row) => row.id === sessionId)
+    if (!session) {
+      return
     }
-    return removed
+    session.answers = [...session.answers, answer]
   }
 }
 

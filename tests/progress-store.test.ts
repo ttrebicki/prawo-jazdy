@@ -52,7 +52,7 @@ describe('ProgressStore', () => {
     expect(mistakes.map((m) => m.number)).toEqual(['10'])
   })
 
-  it('drops progress for numbers removed from a new catalog', () => {
+  it('keeps progress when an official number leaves the live catalog', () => {
     const store = new ProgressStore()
     store.recordAnswer({
       number: '1',
@@ -69,6 +69,33 @@ describe('ProgressStore', () => {
       mediaViewable: true,
     })
     store.reconcileAfterImport('B', new Set(['2']))
-    expect(store.dump('B').map((p) => p.number)).toEqual(['2'])
+    expect(store.dump('B').map((p) => p.number).sort()).toEqual(['1', '2'])
+  })
+
+  it('tracks practice sessions and answers in order', () => {
+    const store = new ProgressStore()
+    const session = store.startSession({
+      kind: 'practice',
+      category: 'B',
+      questionNumbers: ['5', '6'],
+    })
+
+    store.recordAnswer({
+      number: '5',
+      category: 'B',
+      userAnswer: 'T',
+      correctAnswer: 'T',
+      mediaViewable: true,
+      sessionId: session.id,
+    })
+
+    const finished = store.finishSession({
+      sessionId: session.id,
+      score: 1,
+      passed: true,
+    })
+
+    expect(finished?.answers.map((a) => a.number)).toEqual(['5'])
+    expect(store.listSessions('B')).toHaveLength(1)
   })
 })
