@@ -1,6 +1,26 @@
+import * as XLSX from 'xlsx'
 import { describe, expect, it } from 'vitest'
-import { importCatalogRows, mapCatalogRow } from '../src/domain/import-catalog.ts'
+import {
+  importCatalogRows,
+  isBlankCatalogRow,
+  mapCatalogRow,
+  parseWorkbookBuffer,
+} from '../src/domain/import-catalog.ts'
+import { VERIFICATION_SHEET } from '../src/domain/constants.ts'
 import { normalizeScope } from '../src/domain/normalize-scope.ts'
+
+const HEADER_ROW = [
+  'Numer pytania',
+  'Pytanie',
+  'Odpowiedź A',
+  'Odpowiedź B',
+  'Odpowiedź C',
+  'Poprawna odp',
+  'Media',
+  'Zakres struktury',
+  'Liczba punktów',
+  'Kategorie',
+] as const
 
 describe('normalizeScope', () => {
   it('maps workbook spellings including the known typo', () => {
@@ -8,6 +28,19 @@ describe('normalizeScope', () => {
     expect(normalizeScope('Podstawowy')).toBe('basic')
     expect(normalizeScope('SPECJALISTYCZNY')).toBe('specialist')
     expect(normalizeScope('Specajlistyczny')).toBe('specialist')
+  })
+})
+
+describe('isBlankCatalogRow', () => {
+  it('treats trailing empty rows as blank', () => {
+    expect(isBlankCatalogRow({})).toBe(true)
+    expect(
+      isBlankCatalogRow({
+        'Numer pytania': '',
+        Pytanie: '',
+        'Poprawna odp': '',
+      }),
+    ).toBe(true)
   })
 })
 
@@ -19,7 +52,7 @@ describe('mapCatalogRow', () => {
       'Odpowiedź A': '',
       'Odpowiedź B': '',
       'Odpowiedź C': '',
-      'Poprawna odp': 'T',
+      'Poprawna odp': 'Tak',
       Media: 'clip_przyklad.wmv',
       'Zakres struktury': 'PODSTAWOWY',
       'Liczba punktów': '3',
@@ -33,6 +66,7 @@ describe('mapCatalogRow', () => {
       points: 3,
       categories: ['B', 'AM'],
       mediaKind: 'video',
+      sourceSheet: 'katalog',
     })
   })
 
@@ -70,17 +104,86 @@ describe('importCatalogRows', () => {
       {
         'Numer pytania': '1',
         Pytanie: 'P1',
-        'Poprawna odp': 'N',
+        'Poprawna odp': 'Nie',
         'Zakres struktury': 'PODSTAWOWY',
         'Liczba punktów': '1',
         Kategorie: 'B',
         Media: '',
       },
       { 'Numer pytania': '' },
+      {},
     ])
     expect(questions).toHaveLength(1)
     expect(stats.kept).toBe(1)
-    expect(stats.blankRowsSkipped).toBe(1)
+    expect(stats.blankRowsSkipped).toBe(2)
     expect(stats.noMediaInCatalog).toBe(1)
+  })
+})
+
+describe('parseWorkbookBuffer', () => {
+  it('imports katalog only and counts verification rows', () => {
+    const workbook = XLSX.utils.book_new()
+    const header = [...HEADER_ROW]
+    const katalogSheet = XLSX.utils.aoa_to_sheet([
+      header,
+      [
+        '8001',
+        'Fixture podstawowe?',
+        '',
+        '',
+        '',
+        'Nie',
+        '',
+        'PODSTAWOWY',
+        '2',
+        'B',
+      ],
+      ['', '', '', '', '', '', '', '', '', ''],
+    ])
+    const verificationSheet = XLSX.utils.aoa_to_sheet([
+      header,
+      [
+        '7001',
+        'Fixture weryfikacja?',
+        '',
+        '',
+        '',
+        'Tak',
+        '',
+        'PODSTAWOWY',
+        '1',
+        'B',
+      ],
+      [
+        '7002',
+        'Fixture weryfikacja dwa?',
+        '',
+        '',
+        '',
+        'Nie',
+        '',
+        'PODSTAWOWY',
+        '1',
+        'B',
+      ],
+    ])
+    XLSX.utils.book_append_sheet(workbook, katalogSheet, 'katalog')
+    XLSX.utils.book_append_sheet(workbook, verificationSheet, VERIFICATION_SHEET)
+
+    const nodeBuffer = XLSX.write(workbook, {
+      bookType: 'xlsx',
+      type: 'buffer',
+    }) as Buffer
+    const buffer = nodeBuffer.buffer.slice(
+      nodeBuffer.byteOffset,
+      nodeBuffer.byteOffset + nodeBuffer.byteLength,
+    )
+    const { questions, stats } = parseWorkbookBuffer(buffer)
+
+    expect(questions).toHaveLength(1)
+    expect(questions[0]?.number).toBe('8001')
+    expect(stats.kept).toBe(1)
+    expect(stats.verificationSkipped).toBe(2)
+    expect(stats.blankRowsSkipped).toBe(1)
   })
 })
