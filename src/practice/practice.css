@@ -201,6 +201,27 @@
   font-weight: 600;
 }
 
+.practice-why {
+  margin: 0;
+  padding: 0.85rem 1rem;
+  border-radius: var(--practice-radius, 0.75rem);
+  background: var(--practice-surface, #1e293b);
+  border-left: 4px solid var(--practice-accent, #38bdf8);
+}
+
+.practice-why-title {
+  margin: 0 0 0.35rem;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.practice-why-text {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.45;
+  color: var(--practice-text, #f8fafc);
+}
+
 .practice-filters {
   margin: 0;
   padding: 0;

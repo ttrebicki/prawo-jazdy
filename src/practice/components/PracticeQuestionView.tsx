@@ -26,6 +26,7 @@ export function PracticeQuestionView({
 }: PracticeQuestionViewProps) {
   const [picked, setPicked] = useState<UserAnswer | null>(null)
   const [revealed, setRevealed] = useState(false)
+  const [whyText, setWhyText] = useState<string | null>(null)
 
   const { media, mediaViewable, mediaUrl } = useQuestionMedia(
     question,
@@ -35,7 +36,26 @@ export function PracticeQuestionView({
   useEffect(() => {
     setPicked(null)
     setRevealed(false)
+    setWhyText(null)
   }, [question.number])
+
+  useEffect(() => {
+    if (!revealed) {
+      setWhyText(null)
+      return
+    }
+    let cancelled = false
+    void deps.getExplanation(question.number).then((text) => {
+      if (cancelled) {
+        return
+      }
+      const trimmed = text?.trim()
+      setWhyText(trimmed ? trimmed : null)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [deps, question.number, revealed])
 
   const correctKey = useMemo(() => getCorrectAnswerKey(question), [question])
 
@@ -90,6 +110,7 @@ export function PracticeQuestionView({
             picked={picked}
             correctKey={correctKey}
             mediaViewable={mediaViewable}
+            whyText={whyText}
             onContinue={() => onNext(question)}
           />
         )}

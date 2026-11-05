@@ -3,9 +3,11 @@ import { openDB, type DBSchema, type IDBPDatabase } from 'idb'
 import type {
   CatalogMeta,
   CategoryCode,
+  QuestionExplanation,
   QuestionProgress,
   QuestionRecord,
 } from '../domain/types.ts'
+import { normalizeExplanationText } from './explanation-text.ts'
 
 /** Mirrors `StudySession` in progress-store (kept here to avoid import cycles). */
 export interface StoredStudySession {
@@ -59,10 +61,18 @@ interface StudyDb extends DBSchema {
     key: number
     value: StoredStudySession
   }
+  explanations: {
+    key: string
+    value: {
+      officialNumber: string
+      text: string
+      updatedAt: string
+    }
+  }
 }
 
 const DB_NAME = 'prawo-jazdy-study'
-const DB_VERSION = 2
+const DB_VERSION = 3
 
 let dbPromise: Promise<IDBPDatabase<StudyDb>> | null = null
 
@@ -87,6 +97,9 @@ export function getDb(): Promise<IDBPDatabase<StudyDb>> {
           if (!db.objectStoreNames.contains('sessions')) {
             db.createObjectStore('sessions', { keyPath: 'id', autoIncrement: true })
           }
+        }
+        if (oldVersion < 3 && !db.objectStoreNames.contains('explanations')) {
+          db.createObjectStore('explanations', { keyPath: 'officialNumber' })
         }
       },
     })
@@ -141,6 +154,32 @@ export async function loadProgress(): Promise<QuestionProgress[]> {
   const db = await getDb()
   const rows = await db.getAll('progress')
   return rows.map(({ id: _id, ...rest }) => rest)
+}
+
+export async function saveQuestionExplanation(
+  explanation: QuestionExplanation,
+): Promise<void> {
+  const text = normalizeExplanationText(explanation.text)
+  if (!text) {
+    return
+  }
+  const db = await getDb()
+  await db.put('explanations', {
+    officialNumber: explanation.officialNumber,
+    text,
+    updatedAt: new Date().toISOString(),
+  })
+}
+
+export async function getQuestionExplanation(
+  officialNumber: string,
+): Promise<string | null> {
+  const db = await getDb()
+  const row = await db.get('explanations', officialNumber)
+  if (!row?.text?.trim()) {
+    return null
+  }
+  return row.text.trim()
 }
 
 export async function putMediaFile(filename: string, blob: Blob): Promise<void> {

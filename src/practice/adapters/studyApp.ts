@@ -13,5 +13,6 @@ export function practiceDepsFromStudyApp(app: StudyApp): PracticeDependencies {
     recordAnswer: async (input) => {
       await app.recordAnswer(input)
     },
+    getExplanation: (officialNumber) => app.getExplanation(officialNumber),
   }
 }

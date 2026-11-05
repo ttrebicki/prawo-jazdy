@@ -13,4 +13,5 @@ export interface PracticeDependencies {
   mediaLookup: MediaLookup
   hasImageOnDevice: (filename: string) => boolean
   recordAnswer: (input: RecordAnswerInput) => Promise<void>
+  getExplanation: (officialNumber: string) => Promise<string | null>
 }

@@ -79,6 +79,12 @@ export interface ImportStats {
   noMediaInCatalog: number
 }
 
+/** User- or app-authored hint keyed by official catalog number (not in the workbook). */
+export interface QuestionExplanation {
+  officialNumber: string
+  text: string
+}
+
 export interface PracticeFilters {
   scopeBasic: boolean
   scopeSpecialist: boolean

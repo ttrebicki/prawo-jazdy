@@ -6,6 +6,7 @@ interface FeedbackPanelProps {
   picked: UserAnswer
   correctKey: UserAnswer
   mediaViewable: boolean
+  whyText: string | null
   onContinue: () => void
 }
 
@@ -14,6 +15,7 @@ export function FeedbackPanel({
   picked,
   correctKey,
   mediaViewable,
+  whyText,
   onContinue,
 }: FeedbackPanelProps) {
   const isCorrect = picked === correctKey
@@ -46,6 +48,14 @@ export function FeedbackPanel({
           Bez obrazu lub klipu odpowiedź nie jest zaliczana jako opanowanie.
         </p>
       )}
+      {whyText ? (
+        <section className="practice-why" aria-labelledby="practice-why-title">
+          <h2 id="practice-why-title" className="practice-why-title">
+            Dlaczego
+          </h2>
+          <p className="practice-why-text">{whyText}</p>
+        </section>
+      ) : null}
       <button type="button" className="practice-btn" onClick={onContinue}>
         Dalej
       </button>

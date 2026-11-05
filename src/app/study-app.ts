@@ -10,12 +10,14 @@ import {
   countMediaFiles,
   deleteProgressEntry,
   getMediaFile,
+  getQuestionExplanation,
   hasMediaFile,
   importZipImagesFromFile,
   loadCatalog,
   loadProgress,
   saveCatalog,
   saveProgressEntry,
+  saveQuestionExplanation,
 } from '../storage/app-database.ts'
 
 export class StudyApp {
@@ -104,6 +106,17 @@ export class StudyApp {
     const result = await importZipImagesFromFile(file, onProgress)
     await this.refreshMediaIndex()
     return result
+  }
+
+  getExplanation = async (officialNumber: string): Promise<string | null> => {
+    return getQuestionExplanation(officialNumber)
+  }
+
+  saveExplanation = async (
+    officialNumber: string,
+    text: string,
+  ): Promise<void> => {
+    await saveQuestionExplanation({ officialNumber, text })
   }
 }
 
