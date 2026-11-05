@@ -1,29 +1,25 @@
 import type { QuestionScope } from './types.ts'
 
-const BASIC_ALIASES = new Set([
-  'podstawowy',
-  'PODSTAWOWY',
-  'Podstawowy',
-])
+const DIACRITICS = /[\u0300-\u036f]/g
 
-const SPECIALIST_ALIASES = new Set([
-  'specjalistyczny',
-  'SPECJALISTYCZNY',
-  'Specjalistyczny',
-  'specajlistyczny',
-  'Specajlistyczny',
-])
+function fold(value: string): string {
+  return value
+    .trim()
+    .normalize('NFD')
+    .replace(DIACRITICS, '')
+    .toLowerCase()
+}
 
+/** Maps official scope labels (including odd capitals and the `Specajlistyczny` typo). */
 export function normalizeScope(raw: string): QuestionScope | null {
-  const trimmed = raw.trim()
-  if (BASIC_ALIASES.has(trimmed) || trimmed.toLowerCase() === 'podstawowy') {
+  const text = fold(raw)
+  if (!text) {
+    return null
+  }
+  if (text.includes('podstaw')) {
     return 'basic'
   }
-  if (
-    SPECIALIST_ALIASES.has(trimmed) ||
-    trimmed.toLowerCase() === 'specjalistyczny' ||
-    trimmed.toLowerCase() === 'specajlistyczny'
-  ) {
+  if (/spec[a-z]*list/.test(text)) {
     return 'specialist'
   }
   return null
