@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+
 .import-wb {
   --import-wb-bg: #f5f4f0;
   --import-wb-border: #dfe2e5;
@@ -9,6 +11,7 @@
   --import-wb-surface: #ffffff;
   --import-wb-frame-radius: 32px;
   --import-wb-content-px: 22px;
+  --import-wb-font: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
   max-width: 402px;
   width: 100%;
   margin: 0 auto;
@@ -20,12 +23,7 @@
   flex-direction: column;
   overflow: hidden;
   color: var(--import-wb-text);
-  font-family:
-    Inter,
-    'Segoe UI',
-    system-ui,
-    -apple-system,
-    sans-serif;
+  font-family: var(--import-wb-font);
 }
 
 .import-wb__status {
