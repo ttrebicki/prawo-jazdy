@@ -7,6 +7,7 @@ import type {
   QuestionScope,
 } from './types.ts'
 import { ACTIVE_CATEGORY } from './types.ts'
+import { getMediaFile } from '../storage/app-database.ts'
 
 export interface QuestionBankSnapshot {
   questions: QuestionRecord[]
@@ -15,6 +16,11 @@ export interface QuestionBankSnapshot {
 }
 
 export type MediaLookup = (filename: string | null) => Promise<Blob | null>
+
+export interface LiveQuestionFilter {
+  scope?: QuestionScope
+  points?: 1 | 2 | 3
+}
 
 function questionMatchesCategory(
   question: QuestionRecord,
@@ -78,6 +84,20 @@ export class QuestionBank {
   private catalogLastModified: string | null = null
   private catalogFilename: string | null = null
 
+  static async openFromIndexedDB(): Promise<QuestionBank> {
+    const { loadCatalog } = await import('../storage/app-database.ts')
+    const bank = new QuestionBank()
+    const row = await loadCatalog()
+    if (row) {
+      bank.load({
+        questions: row.questions,
+        catalogFilename: row.meta.filename,
+        catalogLastModified: row.meta.lastModified,
+      })
+    }
+    return bank
+  }
+
   load(snapshot: QuestionBankSnapshot): void {
     this.questions = snapshot.questions
     this.catalogLastModified = snapshot.catalogLastModified
@@ -106,6 +126,18 @@ export class QuestionBank {
 
   listForCategory(category: CategoryCode): QuestionRecord[] {
     return this.questions.filter((q) => questionMatchesCategory(q, category))
+  }
+
+  /** Live catalog rows for category, optionally filtered by scope and point value. */
+  listLiveQuestions(category: CategoryCode, filter?: LiveQuestionFilter): QuestionRecord[] {
+    let list = this.listForCategory(category)
+    if (filter?.scope) {
+      list = list.filter((q) => q.scope === filter.scope)
+    }
+    if (filter?.points) {
+      list = list.filter((q) => q.points === filter.points)
+    }
+    return list
   }
 
   getByNumber(number: string): QuestionRecord | undefined {
@@ -198,6 +230,15 @@ export class QuestionBank {
         : null
     }
     return pool[Math.floor(Math.random() * pool.length)] ?? null
+  }
+
+  resolveMediaFromIndexedDB(question: QuestionRecord): Promise<MediaResolution> {
+    return resolveMediaForQuestion(question, async (filename) => {
+      if (!filename) {
+        return null
+      }
+      return getMediaFile(filename)
+    })
   }
 }
 
