@@ -1,0 +1,14 @@
+.figma-mistakes-root {
+  --figma-mistakes-bg: #f5f4f0;
+  --figma-mistakes-border: #dfe2e5;
+  --figma-mistakes-text: #202730;
+  --figma-mistakes-muted: #697079;
+  --figma-mistakes-accent: #315be8;
+  --figma-mistakes-error: #ad453d;
+  --figma-mistakes-info-bg: #ebeffe;
+  --figma-mistakes-surface: #ffffff;
+  --figma-mistakes-width: 402px;
+  --figma-mistakes-radius-shell: 32px;
+  --figma-mistakes-radius-control: 14px;
+  --figma-mistakes-radius-back: 10px;
+}
