@@ -1,0 +1,184 @@
+import { useEffect, useMemo, useState } from 'react'
+import {
+  getCorrectAnswerKey,
+  type UserAnswer,
+} from '../../../domain/progress-store.ts'
+import type { QuestionRecord } from '../../../domain/types.ts'
+import { displayExplanationText } from '../../../practice/explanationMessages.ts'
+import { useQuestionMedia } from '../../../practice/hooks/useQuestionMedia.ts'
+import type { PracticeDependencies } from '../../../practice/types.ts'
+import { figmaPracticeAssets } from '../assets.ts'
+import type { FigmaPracticeTheme } from '../theme.ts'
+import { PracticeAnswerList } from './PracticeAnswerList.tsx'
+import { PracticeFrame } from './PracticeFrame.tsx'
+import { PracticeMediaCard, PracticeTextOnlyHint } from './PracticeMediaArea.tsx'
+import { PracticeMetaProgress } from './PracticeMetaProgress.tsx'
+import { PracticeQuestionCopy } from './PracticeQuestionCopy.tsx'
+import { PracticeResultBlock } from './PracticeResultBlock.tsx'
+import { PracticeWhyPanel } from './PracticeWhyPanel.tsx'
+
+interface FigmaPracticeQuestionViewProps {
+  deps: PracticeDependencies
+  question: QuestionRecord
+  questionIndex: number
+  questionTotal: number
+  theme?: FigmaPracticeTheme
+  onNext: (previous: QuestionRecord) => void
+  onBack: () => void
+}
+
+function formatQuestionLabel(number: string): string {
+  return `DEMO B-${number.padStart(4, '0')}`
+}
+
+export function FigmaPracticeQuestionView({
+  deps,
+  question,
+  questionIndex,
+  questionTotal,
+  theme = 'light',
+  onNext,
+  onBack,
+}: FigmaPracticeQuestionViewProps) {
+  const assets = figmaPracticeAssets(theme)
+  const [pendingAnswer, setPendingAnswer] = useState<UserAnswer | null>(null)
+  const [picked, setPicked] = useState<UserAnswer | null>(null)
+  const [revealed, setRevealed] = useState(false)
+  const [whyExpanded, setWhyExpanded] = useState(false)
+  const [storedExplanation, setStoredExplanation] = useState<
+    string | null | undefined
+  >(undefined)
+
+  const { mediaViewable, mediaUrl } = useQuestionMedia(
+    question,
+    deps.mediaLookup,
+  )
+
+  useEffect(() => {
+    setPendingAnswer(null)
+    setPicked(null)
+    setRevealed(false)
+    setWhyExpanded(false)
+    setStoredExplanation(undefined)
+    let cancelled = false
+    void deps.getExplanation(question.number).then((text) => {
+      if (cancelled) {
+        return
+      }
+      const trimmed = text?.trim()
+      setStoredExplanation(trimmed ? trimmed : null)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [deps, question.number])
+
+  const correctKey = useMemo(() => getCorrectAnswerKey(question), [question])
+  const explanationReady = storedExplanation !== undefined
+  const explanationText = displayExplanationText(storedExplanation ?? null)
+  const hasMediaArea = question.mediaKind !== 'none'
+  const progressRatio =
+    questionTotal > 0 ? questionIndex / questionTotal : 0
+
+  const submit = async () => {
+    if (revealed || pendingAnswer === null) {
+      return
+    }
+    setPicked(pendingAnswer)
+    setRevealed(true)
+    setWhyExpanded(true)
+    await deps.recordAnswer({
+      number: question.number,
+      category: deps.category,
+      userAnswer: pendingAnswer,
+      correctAnswer: correctKey,
+      mediaViewable,
+    })
+  }
+
+  const showWhyExpanded =
+    revealed || (whyExpanded && explanationReady)
+
+  const whyToggle = () => {
+    setWhyExpanded((open) => !open)
+  }
+
+  const footnote = revealed
+    ? 'Wynik dotyczy wyłącznie treści pokazowej.'
+    : 'To ćwiczenie demonstracyjne, nie pytanie egzaminacyjne.'
+
+  return (
+    <PracticeFrame theme={theme} onBack={onBack}>
+      <PracticeMetaProgress
+        questionLabel={formatQuestionLabel(question.number)}
+        progressLabel={`${questionIndex} z ${questionTotal}`}
+        progressRatio={progressRatio}
+      />
+
+      {hasMediaArea ? (
+        <PracticeMediaCard assets={assets} mediaUrl={mediaUrl} />
+      ) : (
+        <PracticeTextOnlyHint assets={assets} />
+      )}
+
+      <PracticeQuestionCopy prompt={question.prompt} />
+
+      <PracticeAnswerList
+        question={question}
+        assets={assets}
+        mode={revealed ? 'review' : 'pick'}
+        selected={pendingAnswer}
+        picked={picked}
+        correctKey={correctKey}
+        onSelect={revealed ? undefined : setPendingAnswer}
+      />
+
+      {revealed && picked !== null ? (
+        <PracticeResultBlock
+          isCorrect={picked === correctKey}
+          correctKey={correctKey}
+        />
+      ) : null}
+
+      {showWhyExpanded ? (
+        <PracticeWhyPanel
+          assets={assets}
+          text={explanationText}
+          expanded
+          onToggle={whyToggle}
+        />
+      ) : (
+        <PracticeWhyPanel
+          assets={assets}
+          text={explanationText}
+          expanded={false}
+          onToggle={() => setWhyExpanded(true)}
+        />
+      )}
+
+      <button
+        type="button"
+        className="fp-primary-action"
+        disabled={!revealed && pendingAnswer === null}
+        onClick={() => {
+          if (revealed) {
+            onNext(question)
+            return
+          }
+          void submit()
+        }}
+      >
+        {revealed ? (
+          <>
+            Następne pytanie
+            <img className="fp-icon fp-icon--18" src={assets.arrowRight} alt="" />
+          </>
+        ) : (
+          'Sprawdź odpowiedź'
+        )}
+      </button>
+
+      <p className="fp-footnote">{footnote}</p>
+    </PracticeFrame>
+  )
+}
