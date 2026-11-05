@@ -276,10 +276,10 @@ const drainZipEntry = (file: Parameters<NonNullable<Unzip['onfile']>>[0]): Promi
   })
 
 /** Streams zip members; never loads the whole archive into one in-memory blob. */
-export async function importZipImagesFromFile(
-  file: File,
+const importZipImagesFromStream = async (
+  reader: ReadableStreamDefaultReader<Uint8Array>,
   onProgress?: (processed: number) => void,
-): Promise<{ stored: number; skipped: number; wmvGaps: number }> {
+): Promise<{ stored: number; skipped: number; wmvGaps: number }> => {
   const unzip = new Unzip()
   unzip.register(UnzipInflate)
 
@@ -344,7 +344,6 @@ export async function importZipImagesFromFile(
     )
   }
 
-  const reader = file.stream().getReader()
   while (true) {
     const { done, value } = await reader.read()
     unzip.push(value ?? new Uint8Array(0), done)
@@ -355,4 +354,21 @@ export async function importZipImagesFromFile(
 
   await Promise.all(pending)
   return { stored, skipped, wmvGaps }
+}
+
+export async function importZipImagesFromFile(
+  file: File,
+  onProgress?: (processed: number) => void,
+): Promise<{ stored: number; skipped: number; wmvGaps: number }> {
+  return importZipImagesFromStream(file.stream().getReader(), onProgress)
+}
+
+export async function importZipImagesFromResponse(
+  response: Response,
+  onProgress?: (processed: number) => void,
+): Promise<{ stored: number; skipped: number; wmvGaps: number }> {
+  if (!response.body) {
+    throw new Error('Serwer nie zwrócił strumienia danych.')
+  }
+  return importZipImagesFromStream(response.body.getReader(), onProgress)
 }
