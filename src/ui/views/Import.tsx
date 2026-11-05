@@ -1,12 +1,12 @@
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import {
-  MEDIA_ZIP_SIZE_LABEL,
-  OFFICIAL_MEDIA_ZIP_URL,
   OFFICIAL_PAGE_URL,
   OFFICIAL_WORKBOOK_URL,
   WORKBOOK_FILENAME,
 } from '../../domain/constants.ts'
 import type { ImportStats } from '../../domain/types.ts'
+import { MediaImportAction } from '../components/MediaImportAction.tsx'
+import type { MediaImportSavePayload } from '../components/MediaImportAction.tsx'
 
 interface ImportProps {
   online: boolean
@@ -16,9 +16,8 @@ interface ImportProps {
     meta: { filename: string; lastModified: string | null },
   ) => Promise<ImportStats>
   onImportMediaZip: (file: File) => Promise<{ stored: number; skipped: number }>
+  onImportOfficialMediaZip: () => Promise<{ stored: number; skipped: number }>
 }
-
-const MEDIA_CONFIRM_MESSAGE = `Archiwum „Multimedia do pytań” ma około ${MEDIA_ZIP_SIZE_LABEL}. Import zapisuje tylko zdjęcia JPG/JPEG pasujące do katalogu. Klipy WMV nadal nie odtwarzają się w typowej przeglądarce mobilnej. Czy chcesz wskazać plik ZIP?`
 
 const NOT_MINISTRY_LINE =
   'To nie jest aplikacja Ministerstwa Infrastruktury ani WORD.'
@@ -28,6 +27,7 @@ export function Import({
   onBack,
   onImportWorkbook,
   onImportMediaZip,
+  onImportOfficialMediaZip,
 }: ImportProps) {
   const [status, setStatus] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -37,7 +37,6 @@ export function Import({
     stored: number
     skipped: number
   } | null>(null)
-  const mediaInputRef = useRef<HTMLInputElement>(null)
 
   const handleDownload = async () => {
     if (!online) {
@@ -98,33 +97,11 @@ export function Import({
     }
   }
 
-  const openMediaPicker = () => {
-    if (!window.confirm(MEDIA_CONFIRM_MESSAGE)) {
-      return
+  const handleMediaSave = async (payload: MediaImportSavePayload) => {
+    if (payload.kind === 'file') {
+      return onImportMediaZip(payload.file)
     }
-    mediaInputRef.current?.click()
-  }
-
-  const handleMediaPick = async (file: File | undefined) => {
-    if (!file) {
-      return
-    }
-    setBusy(true)
-    setError(null)
-    setStatus('Import zdjęć z archiwum (tylko JPG/JPEG)…')
-    try {
-      const result = await onImportMediaZip(file)
-      setMediaResult(result)
-      setStatus(`Zapisano ${result.stored} zdjęć na urządzeniu.`)
-    } catch (e) {
-      setError(
-        e instanceof Error
-          ? e.message
-          : 'Import multimediów nie powiódł się. Poprzednie pliki pozostają.',
-      )
-    } finally {
-      setBusy(false)
-    }
+    return onImportOfficialMediaZip()
   }
 
   return (
@@ -207,38 +184,22 @@ export function Import({
         </section>
       )}
 
-      <section className="card stack">
-        <h2 className="page-title-sm">Multimedia (osobna operacja)</h2>
+      <MediaImportAction
+        busy={busy}
+        online={online}
+        onSave={handleMediaSave}
+        onBusyChange={setBusy}
+        onStatus={setStatus}
+        onError={setError}
+        onResult={setMediaResult}
+      />
+
+      {mediaResult && (
         <p className="muted">
-          Przed wyborem pliku zobaczysz potwierdzenie z rozmiarem archiwum (
-          {MEDIA_ZIP_SIZE_LABEL}). Import zapisuje tylko JPG/JPEG na urządzeniu.
+          Zapisano <strong>{mediaResult.stored}</strong> plików · pominięto{' '}
+          {mediaResult.skipped}
         </p>
-        <a className="muted text-link" href={OFFICIAL_MEDIA_ZIP_URL} target="_blank" rel="noreferrer">
-          Oficjalne archiwum na gov.pl
-        </a>
-        <button
-          type="button"
-          className="btn btn-secondary"
-          disabled={busy}
-          onClick={openMediaPicker}
-        >
-          Wskaż pobrany plik ZIP ({MEDIA_ZIP_SIZE_LABEL})
-        </button>
-        <input
-          ref={mediaInputRef}
-          type="file"
-          accept=".zip,application/zip"
-          hidden
-          disabled={busy}
-          onChange={(e) => void handleMediaPick(e.target.files?.[0])}
-        />
-        {mediaResult && (
-          <p className="muted">
-            Zapisano <strong>{mediaResult.stored}</strong> plików · pominięto{' '}
-            {mediaResult.skipped}
-          </p>
-        )}
-      </section>
+      )}
     </div>
   )
 }

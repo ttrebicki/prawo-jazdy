@@ -98,6 +98,11 @@ function App() {
             refresh()
             return result
           }}
+          onImportOfficialMediaZip={async () => {
+            const result = await studyApp.importOfficialMediaZip()
+            refresh()
+            return result
+          }}
         />
       )
       break

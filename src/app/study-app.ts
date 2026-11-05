@@ -7,12 +7,16 @@ import { ProgressStore } from '../domain/progress-store.ts'
 import type { CatalogMeta, ImportStats, QuestionProgress } from '../domain/types.ts'
 import { ACTIVE_CATEGORY } from '../domain/types.ts'
 import {
+  OFFICIAL_MEDIA_ZIP_URL,
+} from '../domain/constants.ts'
+import {
   countMediaFiles,
   deleteProgressEntry,
   getMediaFile,
   getQuestionExplanation,
   hasMediaFile,
   importZipImagesFromFile,
+  importZipImagesFromResponse,
   loadCatalog,
   loadProgress,
   saveCatalog,
@@ -105,7 +109,19 @@ export class StudyApp {
   ): Promise<{ stored: number; skipped: number }> {
     const result = await importZipImagesFromFile(file, onProgress)
     await this.refreshMediaIndex()
-    return result
+    return { stored: result.stored, skipped: result.skipped }
+  }
+
+  async importOfficialMediaZip(
+    onProgress?: (n: number) => void,
+  ): Promise<{ stored: number; skipped: number }> {
+    const response = await fetch(OFFICIAL_MEDIA_ZIP_URL)
+    if (!response.ok) {
+      throw new Error(`Serwer zwrócił ${response.status}`)
+    }
+    const result = await importZipImagesFromResponse(response, onProgress)
+    await this.refreshMediaIndex()
+    return { stored: result.stored, skipped: result.skipped }
   }
 
   getExplanation = async (officialNumber: string): Promise<string | null> => {
