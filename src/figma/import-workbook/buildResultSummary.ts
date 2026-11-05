@@ -1,7 +1,15 @@
 import type { ImportStats } from '../../domain/types.ts'
 import { ACTIVE_CATEGORY } from '../../domain/types.ts'
 import type { QuestionBank } from '../../domain/question-bank.ts'
-import type { ImportWorkbookResultSummary } from './ImportWorkbookResultView.tsx'
+
+/** Live import metrics (UI may still show Figma sample rows on the result screen). */
+export interface ImportWorkbookResultSummary {
+  catalogDateLabel: string | null
+  keptActive: number
+  categoryBCount: number
+  verificationExcluded: number
+  categoryBWithoutMedia: number
+}
 
 export function buildImportWorkbookResultSummary(
   stats: ImportStats,

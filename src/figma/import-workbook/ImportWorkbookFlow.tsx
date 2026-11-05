@@ -1,10 +1,8 @@
 import { useCallback, useState } from 'react'
-import type { ImportStats } from '../../domain/types.ts'
 import {
   OFFICIAL_WORKBOOK_URL,
   WORKBOOK_FILENAME,
 } from '../../domain/constants.ts'
-import type { ImportWorkbookResultSummary } from './ImportWorkbookResultView.tsx'
 import { ImportWorkbookChoiceView } from './ImportWorkbookChoiceView.tsx'
 import { ImportWorkbookResultView } from './ImportWorkbookResultView.tsx'
 import './import-workbook.css'
@@ -15,8 +13,7 @@ export interface ImportWorkbookFlowProps {
   onImportWorkbook: (
     buffer: ArrayBuffer,
     meta: { filename: string; lastModified: string | null },
-  ) => Promise<ImportStats>
-  buildResultSummary: (stats: ImportStats) => ImportWorkbookResultSummary
+  ) => Promise<unknown>
   onContinueToMedia: () => void
   onGoToPractice: () => void
 }
@@ -27,12 +24,10 @@ export function ImportWorkbookFlow({
   online,
   onBack,
   onImportWorkbook,
-  buildResultSummary,
   onContinueToMedia,
   onGoToPractice,
 }: ImportWorkbookFlowProps) {
   const [step, setStep] = useState<ImportWorkbookStep>('choice')
-  const [summary, setSummary] = useState<ImportWorkbookResultSummary | null>(null)
   const [busy, setBusy] = useState(false)
   const [status, setStatus] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -50,8 +45,7 @@ export function ImportWorkbookFlow({
       setStatus(statusMessage)
       try {
         const { buffer, meta } = await loadBuffer()
-        const stats = await onImportWorkbook(buffer, meta)
-        setSummary(buildResultSummary(stats))
+        await onImportWorkbook(buffer, meta)
         setStep('result')
         setStatus(null)
       } catch (e) {
@@ -65,7 +59,7 @@ export function ImportWorkbookFlow({
         setBusy(false)
       }
     },
-    [buildResultSummary, onImportWorkbook],
+    [onImportWorkbook],
   )
 
   const handleDownloadOfficial = useCallback(() => {
@@ -100,15 +94,13 @@ export function ImportWorkbookFlow({
 
   const handleBackFromResult = useCallback(() => {
     setStep('choice')
-    setSummary(null)
     setError(null)
     setStatus(null)
   }, [])
 
-  if (step === 'result' && summary) {
+  if (step === 'result') {
     return (
       <ImportWorkbookResultView
-        summary={summary}
         busy={busy}
         onBack={handleBackFromResult}
         onContinueToMedia={onContinueToMedia}

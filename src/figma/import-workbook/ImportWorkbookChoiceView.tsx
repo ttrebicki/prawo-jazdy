@@ -101,34 +101,18 @@ export function ImportWorkbookChoiceView({
         />
       </label>
 
-      {!online && (
-        <div className="import-wb__callout" data-name="Informacja">
-          <div className="import-wb__callout-icon">
-            <IconInfo />
-          </div>
-          <div>
-            <p className="import-wb__callout-title">Tryb offline</p>
-            <p className="import-wb__callout-text">
-              Pobieranie z gov.pl wymaga sieci — wskaż kopię skoroszytu zapisanej na
-              urządzeniu.
-            </p>
-          </div>
+      <div className="import-wb__callout" data-node-id="5:3518" data-name="Informacja">
+        <div className="import-wb__callout-icon">
+          <IconInfo />
         </div>
-      )}
-
-      {online && (
-        <div className="import-wb__callout" data-name="Informacja">
-          <div className="import-wb__callout-icon">
-            <IconInfo />
-          </div>
-          <div>
-            <p className="import-wb__callout-title">Arkusz weryfikacyjny</p>
-            <p className="import-wb__callout-text">
-              Wiersze z arkusza „W trakcie weryfikacji” nie trafiają do ćwiczeń.
-            </p>
-          </div>
+        <div>
+          <p className="import-wb__callout-title">To podgląd aplikacji</p>
+          <p className="import-wb__callout-text">
+            Daty i liczby są przykładowe. Ta makieta nie pobiera katalogu ani nie
+            zawiera oficjalnych pytań.
+          </p>
         </div>
-      )}
+      </div>
 
       {busy && status && <p className="import-wb__busy">{status}</p>}
       {error && <p className="import-wb__error">{error}</p>}

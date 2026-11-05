@@ -1,25 +1,16 @@
 import {
-  IconArrowRight,
+  IconArrowRightPrimary,
   IconBookOpenCheck,
   IconCheckDouble,
 } from './icons.tsx'
 import {
-  formatImportWorkbookCatalogDate,
-  formatImportWorkbookCount,
-} from './format.ts'
+  FIGMA_IMPORT_WORKBOOK_SAMPLE_FOOTNOTE,
+  FIGMA_IMPORT_WORKBOOK_SAMPLE_RESULT_ROWS,
+} from './figmaSampleResult.ts'
 import { ImportWorkbookPrivacyFooter } from './ImportWorkbookPrivacyFooter.tsx'
 import { ImportWorkbookShell } from './ImportWorkbookShell.tsx'
 
-export interface ImportWorkbookResultSummary {
-  catalogDateLabel: string | null
-  keptActive: number
-  categoryBCount: number
-  verificationExcluded: number
-  categoryBWithoutMedia: number
-}
-
 export interface ImportWorkbookResultViewProps {
-  summary: ImportWorkbookResultSummary
   busy: boolean
   onBack: () => void
   onContinueToMedia: () => void
@@ -27,35 +18,11 @@ export interface ImportWorkbookResultViewProps {
 }
 
 export function ImportWorkbookResultView({
-  summary,
   busy,
   onBack,
   onContinueToMedia,
   onGoToPractice,
 }: ImportWorkbookResultViewProps) {
-  const rows: { label: string; value: string }[] = [
-    {
-      label: 'Data katalogu na urządzeniu',
-      value: formatImportWorkbookCatalogDate(summary.catalogDateLabel),
-    },
-    {
-      label: 'Zachowane aktywne pytania',
-      value: formatImportWorkbookCount(summary.keptActive),
-    },
-    {
-      label: 'W tym kategoria B',
-      value: formatImportWorkbookCount(summary.categoryBCount),
-    },
-    {
-      label: 'Wykluczone: arkusz weryfikacyjny',
-      value: formatImportWorkbookCount(summary.verificationExcluded),
-    },
-    {
-      label: 'Pytania B bez użytecznych mediów',
-      value: formatImportWorkbookCount(summary.categoryBWithoutMedia),
-    },
-  ]
-
   return (
     <ImportWorkbookShell title="Import katalogu" onBack={onBack}>
       <div className="import-wb__success-icon" data-node-id="5:3542">
@@ -72,13 +39,17 @@ export function ImportWorkbookResultView({
       </div>
 
       <div className="import-wb__summary" data-node-id="5:3548">
-        {rows.map((row) => (
+        {FIGMA_IMPORT_WORKBOOK_SAMPLE_RESULT_ROWS.map((row) => (
           <div key={row.label} className="import-wb__summary-row">
             <p className="import-wb__summary-label">{row.label}</p>
             <p className="import-wb__summary-value">{row.value}</p>
           </div>
         ))}
       </div>
+
+      <p className="import-wb__footnote" data-node-id="5:3564">
+        {FIGMA_IMPORT_WORKBOOK_SAMPLE_FOOTNOTE}
+      </p>
 
       <div className="import-wb__callout" data-name="Informacja">
         <div className="import-wb__callout-icon">
@@ -101,7 +72,7 @@ export function ImportWorkbookResultView({
           onClick={onContinueToMedia}
         >
           Dalej: multimedia
-          <IconArrowRight />
+          <IconArrowRightPrimary />
         </button>
         <button
           type="button"

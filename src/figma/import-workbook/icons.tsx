@@ -1,118 +1,86 @@
-const iconProps = {
-  width: 18,
-  height: 18,
-  viewBox: '0 0 24 24',
-  fill: 'none',
-  stroke: 'currentColor',
-  strokeWidth: 2,
-  strokeLinecap: 'round' as const,
-  strokeLinejoin: 'round' as const,
-  'aria-hidden': true,
+import arrowLeftUrl from './assets/arrow-left.svg'
+import arrowRightPrimaryUrl from './assets/arrow-right-primary.svg'
+import arrowRightUrl from './assets/arrow-right.svg'
+import bookOpenCheckUrl from './assets/book-open-check.svg'
+import checkCheckUrl from './assets/check-check.svg'
+import downloadUrl from './assets/download.svg'
+import folderOpenUrl from './assets/folder-open.svg'
+import infoUrl from './assets/info.svg'
+import iosBatteryUrl from './assets/ios-battery.svg'
+import iosSignalUrl from './assets/ios-signal.svg'
+import iosWifiUrl from './assets/ios-wifi.svg'
+import moreHorizontalUrl from './assets/more-horizontal.svg'
+import smartphoneUrl from './assets/smartphone.svg'
+
+interface FigmaIconImageProps {
+  src: string
+  width: number
+  height: number
+  className?: string
+}
+
+function FigmaIconImage({ src, width, height, className }: FigmaIconImageProps) {
+  return (
+    <img
+      src={src}
+      alt=""
+      width={width}
+      height={height}
+      className={className}
+      aria-hidden
+      draggable={false}
+    />
+  )
 }
 
 export function IconArrowLeft() {
-  return (
-    <svg {...iconProps}>
-      <path d="M19 12H5M12 19l-7-7 7-7" />
-    </svg>
-  )
+  return <FigmaIconImage src={arrowLeftUrl} width={18} height={18} />
 }
 
 export function IconMoreHorizontal() {
-  return (
-    <svg width={20} height={20} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-      <circle cx="5" cy="12" r="1.5" />
-      <circle cx="12" cy="12" r="1.5" />
-      <circle cx="19" cy="12" r="1.5" />
-    </svg>
-  )
+  return <FigmaIconImage src={moreHorizontalUrl} width={20} height={20} />
 }
 
 export function IconDownload() {
-  return (
-    <svg {...iconProps} width={20} height={20}>
-      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" />
-    </svg>
-  )
+  return <FigmaIconImage src={downloadUrl} width={20} height={20} />
 }
 
 export function IconFolderOpen() {
-  return (
-    <svg {...iconProps} width={20} height={20}>
-      <path d="M6 14h12M6 14V8a2 2 0 0 1 2-2h3l2 2h5a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2z" />
-    </svg>
-  )
+  return <FigmaIconImage src={folderOpenUrl} width={20} height={20} />
 }
 
 export function IconArrowRight() {
-  return (
-    <svg {...iconProps}>
-      <path d="M5 12h14M12 5l7 7-7 7" />
-    </svg>
-  )
+  return <FigmaIconImage src={arrowRightUrl} width={18} height={18} />
+}
+
+export function IconArrowRightPrimary() {
+  return <FigmaIconImage src={arrowRightPrimaryUrl} width={18} height={18} />
 }
 
 export function IconInfo() {
-  return (
-    <svg {...iconProps}>
-      <circle cx="12" cy="12" r="10" />
-      <path d="M12 16v-4M12 8h.01" />
-    </svg>
-  )
+  return <FigmaIconImage src={infoUrl} width={18} height={18} />
 }
 
 export function IconSmartphone() {
-  return (
-    <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
-      <rect x="7" y="2" width="10" height="20" rx="2" />
-      <path d="M11 18h2" />
-    </svg>
-  )
+  return <FigmaIconImage src={smartphoneUrl} width={14} height={14} />
 }
 
 export function IconCheckDouble() {
-  return (
-    <svg width={30} height={30} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
-      <path d="M7 12l3 3 7-7M3 12l3 3 7-7" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  )
+  return <FigmaIconImage src={checkCheckUrl} width={30} height={30} />
 }
 
 export function IconBookOpenCheck() {
-  return (
-    <svg {...iconProps}>
-      <path d="M12 11V7M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-      <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-      <path d="M9 14l2 2 4-4" />
-    </svg>
-  )
+  return <FigmaIconImage src={bookOpenCheckUrl} width={18} height={18} />
 }
 
 export function IconSignal() {
-  return (
-    <svg width={18} height={18} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-      <rect x="2" y="14" width="3" height="6" rx="0.5" />
-      <rect x="7" y="10" width="3" height="10" rx="0.5" />
-      <rect x="12" y="6" width="3" height="14" rx="0.5" />
-      <rect x="17" y="2" width="3" height="18" rx="0.5" />
-    </svg>
-  )
+  return <FigmaIconImage src={iosSignalUrl} width={18} height={18} />
 }
 
 export function IconWifi() {
-  return (
-    <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
-      <path d="M5 12.55a11 11 0 0 1 14.08 0M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01" strokeLinecap="round" />
-    </svg>
-  )
+  return <FigmaIconImage src={iosWifiUrl} width={18} height={18} />
 }
 
 export function IconBattery() {
-  return (
-    <svg width={25} height={18} viewBox="0 0 28 14" fill="none" aria-hidden>
-      <rect x="1" y="2" width="22" height="10" rx="2" stroke="currentColor" strokeWidth={1.5} />
-      <rect x="3" y="4" width="16" height="6" rx="1" fill="currentColor" />
-      <path d="M24 5v4" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" />
-    </svg>
-  )
+  return <FigmaIconImage src={iosBatteryUrl} width={25} height={18} />
 }
