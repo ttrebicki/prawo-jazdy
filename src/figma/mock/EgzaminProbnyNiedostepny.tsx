@@ -1,6 +1,3 @@
-import imgIosSignal from './assets/9be9a.svg'
-import imgIosWifiSignal from './assets/6dc5d.svg'
-import imgIosBatteryFull from './assets/f5265.svg'
 import imgArrowLeft from './assets/561ac.svg'
 import imgMoreHorizontal from './assets/56f39.svg'
 import imgLockKeyhole from './assets/2b15b.svg'
@@ -51,43 +48,6 @@ export function EgzaminProbnyNiedostepny({
       data-name="Egzamin próbny · niedostępny"
       data-node-id="5:3899"
     >
-      <div
-        className="figma-mock-exam-unavailable__status-bar"
-        data-name="Pasek stanu"
-        data-node-id="5:3900"
-      >
-        <p className="figma-mock-exam-unavailable__status-time" data-node-id="5:3901">
-          9:41
-        </p>
-        <div
-          className="figma-mock-exam-unavailable__status-icons"
-          data-name="Status urządzenia"
-          data-node-id="5:3902"
-        >
-          <div
-            className="figma-mock-exam-unavailable__icon-slot figma-mock-exam-unavailable__icon-slot--18"
-            data-name="ios-signal"
-            data-node-id="5:4454"
-          >
-            <img alt="" src={imgIosSignal} />
-          </div>
-          <div
-            className="figma-mock-exam-unavailable__icon-slot figma-mock-exam-unavailable__icon-slot--18"
-            data-name="ios-wifi-signal"
-            data-node-id="5:4457"
-          >
-            <img alt="" src={imgIosWifiSignal} />
-          </div>
-          <div
-            className="figma-mock-exam-unavailable__icon-slot figma-mock-exam-unavailable__icon-slot--battery"
-            data-name="ios-battery-full"
-            data-node-id="5:4460"
-          >
-            <img alt="" src={imgIosBatteryFull} />
-          </div>
-        </div>
-      </div>
-
       <div
         className="figma-mock-exam-unavailable__header"
         data-name="Nagłówek"

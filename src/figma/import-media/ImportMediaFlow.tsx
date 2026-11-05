@@ -1,14 +1,10 @@
 import { useState } from 'react'
 import { MEDIA_ZIP_SIZE_LABEL } from '../../domain/constants.ts'
-import {
-  emptyMediaImportDraft,
-  isMediaImportSaveEnabled,
-  type MediaImportDraft,
-} from '../../ui/media-import/can-save-media-import.ts'
 import { buildMediaImportResultViewModel } from './build-result-view-model.ts'
 import { MediaImportBeforeScreen } from './MediaImportBeforeScreen.tsx'
 import { MediaImportResultScreen } from './MediaImportResultScreen.tsx'
 import { MediaImportShell } from './MediaImportShell.tsx'
+import type { MediaImportProgressUpdate } from './run-media-import-save.ts'
 import type {
   MediaImportResultViewModel,
   MediaImportSavePayload,
@@ -23,7 +19,10 @@ export interface ImportMediaFlowProps {
   onSkipPractice: () => void
   onStartPractice: () => void
   onBackToStart: () => void
-  onSave: (payload: MediaImportSavePayload) => Promise<MediaImportSaveResult>
+  onSave: (
+    payload: MediaImportSavePayload,
+    onProgress?: (update: MediaImportProgressUpdate) => void,
+  ) => Promise<MediaImportSaveResult>
   onError?: (message: string | null) => void
 }
 
@@ -38,30 +37,35 @@ export function ImportMediaFlow({
   onError,
 }: ImportMediaFlowProps) {
   const [phase, setPhase] = useState<'before' | 'result'>('before')
-  const [draft, setDraft] = useState<MediaImportDraft>(emptyMediaImportDraft)
   const [busy, setBusy] = useState(false)
   const [statusMessage, setStatusMessage] = useState<string | null>(null)
+  const [progressPercent, setProgressPercent] = useState<number | null>(null)
+  const [error, setError] = useState<string | null>(null)
   const [result, setResult] = useState<MediaImportResultViewModel | null>(null)
 
   const reportError = (message: string | null) => {
+    setError(message)
     onError?.(message)
   }
 
   const handleSave = async () => {
-    if (!isMediaImportSaveEnabled(draft, busy)) {
-      return
-    }
     setBusy(true)
     reportError(null)
-    setStatusMessage(`Pobieranie archiwum (${archiveSizeLabel}) i import zdjęć…`)
+    setProgressPercent(0)
+    setStatusMessage(`Pobieranie archiwum (${archiveSizeLabel})…`)
     try {
       const payload: MediaImportSavePayload = { kind: 'download' }
-      await onSave(payload)
+      await onSave(payload, (update) => {
+        setStatusMessage(update.message)
+        setProgressPercent(
+          update.percent === undefined ? null : update.percent,
+        )
+      })
       const viewModel = buildMediaImportResultViewModel()
       setResult(viewModel)
       setPhase('result')
-      setDraft(emptyMediaImportDraft())
       setStatusMessage(null)
+      setProgressPercent(null)
     } catch (e) {
       reportError(
         e instanceof Error
@@ -69,32 +73,20 @@ export function ImportMediaFlow({
           : 'Import multimediów nie powiódł się. Poprzednie pliki pozostają.',
       )
       setStatusMessage(null)
+      setProgressPercent(null)
     } finally {
       setBusy(false)
     }
   }
 
   const handleBeginDownload = () => {
-    if (busy || !online) {
-      if (!online) {
-        reportError('Brak sieci. Pobieranie archiwum wymaga połączenia.')
-      }
+    if (busy) {
       return
     }
-
-    if (!isMediaImportSaveEnabled(draft, false)) {
-      setDraft({
-        action: 'download',
-        pendingFile: null,
-        isDownloadConfirmed: true,
-      })
-      reportError(null)
-      setStatusMessage(
-        `Potwierdzono pobieranie (${archiveSizeLabel}). Naciśnij ponownie „Rozpocznij pobieranie”, aby rozpocząć transfer.`,
-      )
+    if (!online) {
+      reportError('Brak sieci. Pobieranie archiwum wymaga połączenia.')
       return
     }
-
     void handleSave()
   }
 
@@ -105,6 +97,8 @@ export function ImportMediaFlow({
           busy={busy}
           online={online}
           statusMessage={statusMessage}
+          progressPercent={progressPercent}
+          error={error}
           onBeginDownload={handleBeginDownload}
           onSkip={onSkipPractice}
         />

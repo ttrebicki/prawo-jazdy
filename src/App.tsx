@@ -5,6 +5,12 @@ import {
   type PracticeFilters,
   type QuestionRecord,
 } from './domain/types.ts'
+import {
+  readStoredAppTheme,
+  writeStoredAppTheme,
+  type AppTheme,
+} from './figma/app-theme.ts'
+import { FigmaAppShell } from './figma/FigmaAppShell.tsx'
 import { ImportMediaFlow } from './figma/import-media/index.ts'
 import { runMediaImportSave } from './figma/import-media/run-media-import-save.ts'
 import { ImportWorkbookFlow } from './figma/import-workbook/index.ts'
@@ -30,6 +36,7 @@ import {
 function App() {
   const online = useOnline()
   const [ready, setReady] = useState(false)
+  const [theme, setTheme] = useState<AppTheme>(() => readStoredAppTheme())
   const [view, setView] = useState<AppView>(VIEW_HOME)
   const [filters] = useState<PracticeFilters>(DEFAULT_PRACTICE_FILTERS)
   const [currentQuestion, setCurrentQuestion] = useState<QuestionRecord | null>(
@@ -41,6 +48,11 @@ function App() {
   const { pickQuestion } = usePracticeSession(practiceDeps, filters)
 
   const refresh = useCallback(() => tick((n) => n + 1), [])
+
+  const setAppTheme = useCallback((next: AppTheme) => {
+    writeStoredAppTheme(next)
+    setTheme(next)
+  }, [])
 
   useEffect(() => {
     void (async () => {
@@ -76,12 +88,17 @@ function App() {
   )
 
   if (!ready) {
-    return <p className="figma-start__privacy-text">Ładowanie danych z urządzenia…</p>
+    return (
+      <FigmaAppShell theme={theme}>
+        <p className="figma-start__privacy-text">Ładowanie danych z urządzenia…</p>
+      </FigmaAppShell>
+    )
   }
 
+  let content = null
   switch (view) {
     case VIEW_IMPORT_WORKBOOK:
-      return (
+      content = (
         <ImportWorkbookFlow
           online={online}
           onBack={() => {
@@ -98,8 +115,9 @@ function App() {
           onGoToPractice={startPractice}
         />
       )
+      break
     case VIEW_IMPORT_MEDIA:
-      return (
+      content = (
         <ImportMediaFlow
           online={online}
           onBack={() => {
@@ -112,11 +130,14 @@ function App() {
             setView(VIEW_HOME)
             refresh()
           }}
-          onSave={(payload) => runMediaImportSave(studyApp, payload)}
+          onSave={(payload, onProgress) =>
+            runMediaImportSave(studyApp, payload, onProgress)
+          }
         />
       )
+      break
     case VIEW_PRACTICE:
-      return currentQuestion ? (
+      content = currentQuestion ? (
         <FigmaPracticeQuestionView
           deps={practiceDeps}
           question={currentQuestion}
@@ -125,6 +146,7 @@ function App() {
             1,
             practiceDeps.bank.countByCategory(practiceDeps.category),
           )}
+          theme={theme}
           onNext={handleNext}
           onBack={() => {
             setView(VIEW_HOME)
@@ -133,8 +155,9 @@ function App() {
           }}
         />
       ) : null
+      break
     case VIEW_MISTAKES:
-      return (
+      content = (
         <FigmaMistakesScreen
           progress={studyApp.progress}
           getQuestion={(number) => studyApp.bank.getByNumber(number)}
@@ -145,21 +168,25 @@ function App() {
           onBack={() => setView(VIEW_HOME)}
         />
       )
+      break
     case VIEW_MOCK:
-      return (
+      content = (
         <EgzaminProbnyNiedostepnyMock
           onBack={() => setView(VIEW_HOME)}
           onPractice={startPractice}
           onHome={() => setView(VIEW_HOME)}
         />
       )
+      break
     case VIEW_HOME:
     default:
-      return (
+      content = (
         <StartScreen
           bank={studyApp.bank}
           progress={studyApp.progress}
           hasImageOnDevice={studyApp.hasImageOnDevice}
+          theme={theme}
+          onThemeChange={setAppTheme}
           onPractice={startPractice}
           onMistakes={() => setView(VIEW_MISTAKES)}
           onImport={() => setView(VIEW_IMPORT_WORKBOOK)}
@@ -168,6 +195,8 @@ function App() {
         />
       )
   }
+
+  return <FigmaAppShell theme={theme}>{content}</FigmaAppShell>
 }
 
 export default App

@@ -10,9 +10,6 @@ import { getLastWrongAnswerLabel } from './lastWrongAnswer.ts'
 import { MistakeQuestionRow } from './MistakeQuestionRow.tsx'
 import arrowLeftUrl from './assets/arrow-left.svg'
 import { demoQuestionLabel } from './placeholders.ts'
-import iosBatteryUrl from './assets/ios-battery.svg'
-import iosSignalUrl from './assets/ios-signal.svg'
-import iosWifiUrl from './assets/ios-wifi.svg'
 import moreHorizontalUrl from './assets/more-horizontal.svg'
 import rotateCcwUrl from './assets/rotate-ccw.svg'
 import smartphoneUrl from './assets/smartphone.svg'
@@ -66,33 +63,6 @@ export function FigmaMistakesScreen({
 
   return (
     <div className="figma-mistakes-root" data-node-id="5:3832">
-      <div className="figma-mistakes-status-bar" data-node-id="5:3833" aria-hidden="true">
-        <p className="figma-mistakes-status-time">9:41</p>
-        <div className="figma-mistakes-status-icons">
-          <img
-            className="figma-mistakes-icon-18"
-            src={iosSignalUrl}
-            alt=""
-            width={18}
-            height={18}
-          />
-          <img
-            className="figma-mistakes-icon-18"
-            src={iosWifiUrl}
-            alt=""
-            width={18}
-            height={18}
-          />
-          <img
-            className="figma-mistakes-icon-battery"
-            src={iosBatteryUrl}
-            alt=""
-            width={25}
-            height={18}
-          />
-        </div>
-      </div>
-
       <header className="figma-mistakes-header" data-node-id="5:3839">
         <button
           type="button"

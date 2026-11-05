@@ -1,11 +1,5 @@
 import type { ReactNode } from 'react'
-import {
-  IconArrowLeft,
-  IconBattery,
-  IconMoreHorizontal,
-  IconSignal,
-  IconWifi,
-} from './icons.tsx'
+import { IconArrowLeft, IconMoreHorizontal } from './icons.tsx'
 
 interface ImportWorkbookShellProps {
   title: string
@@ -20,14 +14,6 @@ export function ImportWorkbookShell({
 }: ImportWorkbookShellProps) {
   return (
     <div className="import-wb" data-name="import-workbook-shell">
-      <div className="import-wb__status" data-name="Pasek stanu">
-        <p className="import-wb__status-time">9:41</p>
-        <div className="import-wb__status-icons">
-          <IconSignal />
-          <IconWifi />
-          <IconBattery />
-        </div>
-      </div>
       <header className="import-wb__header" data-name="Nagłówek">
         <button
           type="button"

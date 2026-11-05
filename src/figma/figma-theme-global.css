@@ -1,0 +1,48 @@
+.figma-app-shell[data-theme='dark'] .import-wb {
+  --import-wb-bg: #15191f;
+  --import-wb-border: #353d48;
+  --import-wb-text: #f2f3f5;
+  --import-wb-muted: #a8b0bc;
+  --import-wb-accent: #a5b9ff;
+  --import-wb-accent-soft: #293656;
+  --import-wb-success-soft: #21382f;
+  --import-wb-surface: #20262e;
+}
+
+.figma-app-shell[data-theme='dark'] .figma-import-media {
+  --figma-bg: #15191f;
+  --figma-surface: #20262e;
+  --figma-text: #f2f3f5;
+  --figma-muted: #a8b0bc;
+  --figma-border: #353d48;
+  --figma-accent: #a5b9ff;
+  --figma-accent-soft: #293656;
+  --figma-success-soft: #21382f;
+  --figma-success: #9dd5b8;
+}
+
+.figma-app-shell[data-theme='dark'] .figma-mistakes-root {
+  --figma-mistakes-bg: #15191f;
+  --figma-mistakes-border: #353d48;
+  --figma-mistakes-text: #f2f3f5;
+  --figma-mistakes-muted: #a8b0bc;
+  --figma-mistakes-accent: #a5b9ff;
+  --figma-mistakes-error: #f2a69b;
+  --figma-mistakes-info-bg: #293656;
+  --figma-mistakes-surface: #20262e;
+}
+
+.figma-app-shell[data-theme='dark'] .figma-mock-exam-unavailable {
+  --figma-mock-bg: #15191f;
+  --figma-mock-border: #353d48;
+  --figma-mock-text: #f2f3f5;
+  --figma-mock-muted: #a8b0bc;
+  --figma-mock-accent: #a5b9ff;
+  --figma-mock-accent-soft: #293656;
+  --figma-mock-surface: #20262e;
+}
+
+.figma-app-shell[data-theme='dark'] .figma-import-media__home-bar span,
+.figma-app-shell[data-theme='dark'] .import-wb__home-bar-pill {
+  background: var(--figma-text, #f2f3f5);
+}

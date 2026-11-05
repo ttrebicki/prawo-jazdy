@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useMemo } from 'react'
 import { ACTIVE_CATEGORY } from '../../domain/types.ts'
 import {
   MOCK_EXAM_LOCK_REASON,
@@ -12,20 +12,10 @@ import {
   buildStartCatalogLineTwo,
 } from './sampleCopy.ts'
 import './start.css'
-import { getStartThemeAssets, type StartTheme } from './themeAssets.ts'
+import { getStartThemeAssets } from './themeAssets.ts'
 import type { StartScreenProps } from './types.ts'
 
-const THEME_STORAGE_KEY = 'figma-start-theme'
-
 const countFormat = new Intl.NumberFormat('pl-PL')
-
-function readStoredTheme(fallback: StartTheme): StartTheme {
-  if (typeof window === 'undefined') {
-    return fallback
-  }
-  const stored = window.localStorage.getItem(THEME_STORAGE_KEY)
-  return stored === 'dark' || stored === 'light' ? stored : fallback
-}
 
 interface IconProps {
   src: string
@@ -49,13 +39,11 @@ export function StartScreen({
   onImport,
   onImportMedia,
   onMockExam,
-  initialTheme = 'light',
+  theme,
+  onThemeChange,
 }: StartScreenProps) {
   void _progress
 
-  const [theme, setTheme] = useState<StartTheme>(() =>
-    readStoredTheme(initialTheme),
-  )
   const assets = useMemo(() => getStartThemeAssets(theme), [theme])
 
   const meta = bank.getCatalogMeta()
@@ -76,29 +64,13 @@ export function StartScreen({
   )
 
   const toggleTheme = useCallback(() => {
-    setTheme((current) => {
-      const next: StartTheme = current === 'light' ? 'dark' : 'light'
-      window.localStorage.setItem(THEME_STORAGE_KEY, next)
-      return next
-    })
-  }, [])
+    onThemeChange(theme === 'light' ? 'dark' : 'light')
+  }, [onThemeChange, theme])
 
   const openMediaImport = onImportMedia ?? onImport
 
   return (
     <div className="figma-start" data-theme={theme}>
-      <div className="figma-start__status-bar" aria-hidden="true">
-        <p className="figma-start__status-time">9:41</p>
-        <div className="figma-start__status-icons">
-          <StartIcon src={assets.iosSignal} sizeClass="figma-start__icon--18" />
-          <StartIcon src={assets.iosWifi} sizeClass="figma-start__icon--18" />
-          <StartIcon
-            src={assets.iosBattery}
-            sizeClass="figma-start__icon--18-wide"
-          />
-        </div>
-      </div>
-
       <header className="figma-start__header">
         <div className="figma-start__logo" aria-hidden="true">
           <StartIcon src={assets.route} sizeClass="figma-start__icon--18" />

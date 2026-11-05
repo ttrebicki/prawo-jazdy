@@ -15,6 +15,8 @@ interface MediaImportBeforeScreenProps {
   busy: boolean
   online: boolean
   statusMessage: string | null
+  progressPercent: number | null
+  error: string | null
   onBeginDownload: () => void
   onSkip: () => void
 }
@@ -23,6 +25,8 @@ export function MediaImportBeforeScreen({
   busy,
   online,
   statusMessage,
+  progressPercent,
+  error,
   onBeginDownload,
   onSkip,
 }: MediaImportBeforeScreenProps) {
@@ -71,9 +75,31 @@ export function MediaImportBeforeScreen({
         </div>
       </div>
 
-      {statusMessage && (
-        <p className="figma-import-media__status" aria-live="polite">
-          {statusMessage}
+      {(statusMessage || progressPercent !== null) && (
+        <div className="figma-import-media__progress" aria-live="polite">
+          {statusMessage && (
+            <p className="figma-import-media__status">{statusMessage}</p>
+          )}
+          {progressPercent !== null && (
+            <div
+              className="figma-import-media__progress-track"
+              role="progressbar"
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={progressPercent}
+            >
+              <div
+                className="figma-import-media__progress-fill"
+                style={{ width: `${progressPercent}%` }}
+              />
+            </div>
+          )}
+        </div>
+      )}
+
+      {error && (
+        <p className="figma-import-media__error" role="alert">
+          {error}
         </p>
       )}
 
@@ -84,7 +110,7 @@ export function MediaImportBeforeScreen({
           disabled={busy || !online}
           onClick={onBeginDownload}
         >
-          Rozpocznij pobieranie
+          {busy ? 'Pobieranie…' : 'Rozpocznij pobieranie'}
           <IconDownload />
         </button>
         <button

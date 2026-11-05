@@ -328,6 +328,40 @@
   color: var(--figma-muted);
 }
 
+.figma-import-media__progress {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.figma-import-media__progress-track {
+  height: 0.5rem;
+  border-radius: 999px;
+  background: var(--figma-border);
+  overflow: hidden;
+}
+
+.figma-import-media__progress-fill {
+  height: 100%;
+  background: var(--figma-accent);
+  transition: width 0.2s ease;
+}
+
+.figma-import-media__error {
+  margin: 0;
+  padding: 0.75rem 0.875rem;
+  border-radius: var(--figma-radius-sm);
+  background: #f9ede9;
+  color: #ad453d;
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+.figma-app-shell[data-theme='dark'] .figma-import-media__error {
+  background: #382826;
+  color: #f2a69b;
+}
+
 .figma-import-media__home-bar {
   display: flex;
   align-items: center;
