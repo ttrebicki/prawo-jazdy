@@ -11,5 +11,7 @@ export interface StartScreenProps {
   onImport: () => void
   /** Opens import / media flow; defaults to `onImport`. */
   onImportMedia?: () => void
+  /** Opens the locked mock-exam screen (start tile is visually locked). */
+  onMockExam?: () => void
   initialTheme?: StartTheme
 }

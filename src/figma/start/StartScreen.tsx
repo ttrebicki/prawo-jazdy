@@ -48,6 +48,7 @@ export function StartScreen({
   onMistakes,
   onImport,
   onImportMedia,
+  onMockExam,
   initialTheme = 'light',
 }: StartScreenProps) {
   void _progress
@@ -178,6 +179,19 @@ export function StartScreen({
             <span
               className="figma-start__mode figma-start__mode--grow figma-start__mode--locked"
               title={MOCK_EXAM_LOCK_REASON}
+              onClick={onMockExam}
+              onKeyDown={
+                onMockExam
+                  ? (event) => {
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault()
+                        onMockExam()
+                      }
+                    }
+                  : undefined
+              }
+              role={onMockExam ? 'button' : undefined}
+              tabIndex={onMockExam ? 0 : undefined}
             >
               <StartIcon
                 src={assets.lockKeyhole}
