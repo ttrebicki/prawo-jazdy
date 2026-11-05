@@ -16,8 +16,6 @@ import type {
 } from './types.ts'
 import './import-media.css'
 
-const MEDIA_DOWNLOAD_CONFIRM_MESSAGE = `Archiwum „Multimedia do pytań” ma około ${MEDIA_ZIP_SIZE_LABEL}. Import zapisuje tylko zdjęcia JPG/JPEG pasujące do katalogu. Pobieranie z gov.pl rozpocznie się dopiero po naciśnięciu „Zapisz multimedia”. Czy wybrać pobieranie z gov.pl?`
-
 export interface ImportMediaFlowProps {
   online: boolean
   archiveSizeLabel?: string
@@ -45,61 +43,19 @@ export function ImportMediaFlow({
   const [statusMessage, setStatusMessage] = useState<string | null>(null)
   const [result, setResult] = useState<MediaImportResultViewModel | null>(null)
 
-  const saveEnabled = isMediaImportSaveEnabled(draft, busy)
-
   const reportError = (message: string | null) => {
     onError?.(message)
   }
 
-  const handleConfirmDownload = () => {
-    if (!online) {
-      reportError(
-        'Brak sieci. Pobieranie archiwum wymaga połączenia — wskaż plik ZIP z pamięci urządzenia.',
-      )
-      return
-    }
-    if (!window.confirm(MEDIA_DOWNLOAD_CONFIRM_MESSAGE)) {
-      return
-    }
-    setDraft({
-      action: 'download',
-      pendingFile: null,
-      isDownloadConfirmed: true,
-    })
-    reportError(null)
-    setStatusMessage(
-      `Wybrano pobieranie z gov.pl (${archiveSizeLabel}). Naciśnij „Zapisz multimedia”, aby rozpocząć transfer.`,
-    )
-  }
-
-  const handlePickZip = (file: File) => {
-    setDraft({
-      action: 'pick',
-      pendingFile: file,
-      isDownloadConfirmed: false,
-    })
-    reportError(null)
-    setStatusMessage(
-      `Wybrano plik: ${file.name}. Naciśnij „Zapisz multimedia”, aby rozpocząć import.`,
-    )
-  }
-
   const handleSave = async () => {
-    if (!saveEnabled) {
+    if (!isMediaImportSaveEnabled(draft, busy)) {
       return
     }
     setBusy(true)
     reportError(null)
-    setStatusMessage(
-      draft.action === 'download'
-        ? `Pobieranie archiwum (${archiveSizeLabel}) i import zdjęć…`
-        : 'Import zdjęć z archiwum (tylko JPG/JPEG)…',
-    )
+    setStatusMessage(`Pobieranie archiwum (${archiveSizeLabel}) i import zdjęć…`)
     try {
-      const payload: MediaImportSavePayload =
-        draft.pendingFile !== null
-          ? { kind: 'file', file: draft.pendingFile }
-          : { kind: 'download' }
+      const payload: MediaImportSavePayload = { kind: 'download' }
       await onSave(payload)
       const viewModel = buildMediaImportResultViewModel()
       setResult(viewModel)
@@ -118,17 +74,38 @@ export function ImportMediaFlow({
     }
   }
 
+  const handleBeginDownload = () => {
+    if (busy || !online) {
+      if (!online) {
+        reportError('Brak sieci. Pobieranie archiwum wymaga połączenia.')
+      }
+      return
+    }
+
+    if (!isMediaImportSaveEnabled(draft, false)) {
+      setDraft({
+        action: 'download',
+        pendingFile: null,
+        isDownloadConfirmed: true,
+      })
+      reportError(null)
+      setStatusMessage(
+        `Potwierdzono pobieranie (${archiveSizeLabel}). Naciśnij ponownie „Rozpocznij pobieranie”, aby rozpocząć transfer.`,
+      )
+      return
+    }
+
+    void handleSave()
+  }
+
   return (
     <MediaImportShell onBack={onBack}>
       {phase === 'before' && (
         <MediaImportBeforeScreen
-          saveEnabled={saveEnabled}
           busy={busy}
           online={online}
           statusMessage={statusMessage}
-          onConfirmDownload={handleConfirmDownload}
-          onSave={() => void handleSave()}
-          onPickZip={handlePickZip}
+          onBeginDownload={handleBeginDownload}
           onSkip={onSkipPractice}
         />
       )}

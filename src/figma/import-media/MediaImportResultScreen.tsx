@@ -7,6 +7,7 @@ import {
 } from './figma-display-copy.ts'
 import { IconArrowRight, IconFolderCheck, IconInfo } from './icons.tsx'
 import { formatPlNumber } from './format-pl-number.ts'
+import { MediaImportPrivacyLine } from './MediaImportPrivacyLine.tsx'
 
 interface MediaImportResultScreenProps {
   onStartPractice: () => void
@@ -89,6 +90,8 @@ export function MediaImportResultScreen({
           Wróć na start
         </button>
       </div>
+
+      <MediaImportPrivacyLine />
     </>
   )
 }

@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+
 .figma-import-media {
   --figma-bg: #f5f4f0;
   --figma-surface: #ffffff;
@@ -11,6 +13,11 @@
   --figma-radius-lg: 20px;
   --figma-radius-md: 14px;
   --figma-radius-sm: 10px;
+  font-family:
+    'Inter',
+    system-ui,
+    -apple-system,
+    sans-serif;
   color: var(--figma-text);
   background: var(--figma-bg);
   border: 1px solid var(--figma-border);
@@ -246,6 +253,11 @@
   width: 0;
   height: 0;
   opacity: 0;
+}
+
+.figma-import-media__asset {
+  display: block;
+  flex-shrink: 0;
 }
 
 .figma-import-media__privacy {

@@ -1,4 +1,3 @@
-import { useRef } from 'react'
 import {
   FIGMA_BEFORE_ARCHIVE_SIZE,
   FIGMA_BEFORE_SIZE_NOTE,
@@ -8,44 +7,25 @@ import {
   IconClapperboard,
   IconDownload,
   IconImage,
-  IconSmartphone,
   IconWifi,
 } from './icons.tsx'
+import { MediaImportPrivacyLine } from './MediaImportPrivacyLine.tsx'
 
 interface MediaImportBeforeScreenProps {
-  saveEnabled: boolean
   busy: boolean
   online: boolean
   statusMessage: string | null
-  onConfirmDownload: () => void
-  onSave: () => void
-  onPickZip: (file: File) => void
+  onBeginDownload: () => void
   onSkip: () => void
 }
 
 export function MediaImportBeforeScreen({
-  saveEnabled,
   busy,
   online,
   statusMessage,
-  onConfirmDownload,
-  onSave,
-  onPickZip,
+  onBeginDownload,
   onSkip,
 }: MediaImportBeforeScreenProps) {
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  const saveDisabled = busy || !saveEnabled
-
-  const handleFileChange = (file: File | undefined) => {
-    if (!file) {
-      return
-    }
-    onPickZip(file)
-    if (fileInputRef.current) {
-      fileInputRef.current.value = ''
-    }
-  }
-
   return (
     <>
       <div className="figma-import-media__intro">
@@ -97,24 +77,12 @@ export function MediaImportBeforeScreen({
         </p>
       )}
 
-      <label className="figma-import-media__btn figma-import-media__btn--ghost figma-import-media__pick">
-        Wskaż pobrany plik ZIP
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept=".zip,application/zip"
-          hidden
-          disabled={busy}
-          onChange={(e) => handleFileChange(e.target.files?.[0])}
-        />
-      </label>
-
       <div className="figma-import-media__actions">
         <button
           type="button"
           className="figma-import-media__btn figma-import-media__btn--primary"
           disabled={busy || !online}
-          onClick={onConfirmDownload}
+          onClick={onBeginDownload}
         >
           Rozpocznij pobieranie
           <IconDownload />
@@ -127,21 +95,9 @@ export function MediaImportBeforeScreen({
         >
           Pomiń i ćwicz
         </button>
-        <button
-          type="button"
-          className="figma-import-media__btn figma-import-media__btn--primary"
-          disabled={saveDisabled}
-          onClick={onSave}
-        >
-          Zapisz multimedia
-          <IconDownload />
-        </button>
       </div>
 
-      <p className="figma-import-media__privacy">
-        <IconSmartphone />
-        Bez konta. Postępy tylko na tym telefonie.
-      </p>
+      <MediaImportPrivacyLine />
     </>
   )
 }

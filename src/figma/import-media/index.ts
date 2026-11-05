@@ -12,6 +12,8 @@ export {
   FIGMA_BEFORE_SIZE_NOTE,
   FIGMA_RESULT_FOOTNOTE_LINE,
 } from './figma-display-copy.ts'
+export { MediaImportPrivacyLine } from './MediaImportPrivacyLine.tsx'
+export { figmaAssetUrls } from './figma-assets.ts'
 export { displayArchiveSizeHeadline, formatPlNumber } from './format-pl-number.ts'
 export type {
   MediaImportResultViewModel,
