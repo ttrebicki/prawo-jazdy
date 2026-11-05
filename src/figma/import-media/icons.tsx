@@ -186,6 +186,78 @@ export function IconFolderCheck({ className }: IconProps) {
   )
 }
 
+export function IconMoreHorizontal({ className }: IconProps) {
+  return (
+    <svg
+      className={className ?? iconClass}
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden
+    >
+      <circle cx="5" cy="12" r="1.5" fill="currentColor" />
+      <circle cx="12" cy="12" r="1.5" fill="currentColor" />
+      <circle cx="19" cy="12" r="1.5" fill="currentColor" />
+    </svg>
+  )
+}
+
+export function IconStatusSignal({ className }: IconProps) {
+  return (
+    <svg
+      className={className ?? iconClass}
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      aria-hidden
+    >
+      <rect x="2" y="14" width="3" height="6" rx="0.5" opacity="0.35" />
+      <rect x="7" y="11" width="3" height="9" rx="0.5" opacity="0.55" />
+      <rect x="12" y="8" width="3" height="12" rx="0.5" opacity="0.75" />
+      <rect x="17" y="5" width="3" height="15" rx="0.5" />
+    </svg>
+  )
+}
+
+export function IconStatusWifi({ className }: IconProps) {
+  return (
+    <svg
+      className={className ?? iconClass}
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden
+    >
+      <path
+        d="M5 9.5a11 11 0 0114 0M8.5 13a6.5 6.5 0 017 0M12 17h.01"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+    </svg>
+  )
+}
+
+export function IconStatusBattery({ className }: IconProps) {
+  return (
+    <svg
+      className={className ?? iconClass}
+      width="25"
+      height="18"
+      viewBox="0 0 25 18"
+      fill="none"
+      aria-hidden
+    >
+      <rect x="1" y="3" width="20" height="12" rx="3" stroke="currentColor" strokeWidth="1.5" />
+      <rect x="3.5" y="5.5" width="14" height="7" rx="1.5" fill="currentColor" />
+      <path d="M22.5 7.5v5a2 2 0 000-5z" fill="currentColor" />
+    </svg>
+  )
+}
+
 export function IconSmartphone({ className }: IconProps) {
   return (
     <svg

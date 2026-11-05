@@ -24,6 +24,26 @@
   min-height: 40rem;
 }
 
+.figma-import-media__status-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 48px;
+  padding: 0 28px;
+  flex-shrink: 0;
+}
+
+.figma-import-media__status-time {
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.figma-import-media__status-icons {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
 .figma-import-media__header {
   display: flex;
   align-items: center;
@@ -51,6 +71,19 @@
   margin: 0;
   font-size: 1rem;
   font-weight: 400;
+}
+
+.figma-import-media__more {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--figma-text);
+  cursor: pointer;
 }
 
 .figma-import-media__content {

@@ -1,24 +1,23 @@
 import {
-  IconArrowRight,
-  IconFolderCheck,
-  IconInfo,
-  IconSmartphone,
-} from './icons.tsx'
+  FIGMA_RESULT_CLIPS_STORED,
+  FIGMA_RESULT_FOOTNOTE_LINE,
+  FIGMA_RESULT_FOOTNOTE_SECOND,
+  FIGMA_RESULT_IMAGES_FOUND,
+  FIGMA_RESULT_QUESTIONS_B_WITHOUT_MEDIA,
+} from './figma-display-copy.ts'
+import { IconArrowRight, IconFolderCheck, IconInfo } from './icons.tsx'
 import { formatPlNumber } from './format-pl-number.ts'
-import type { MediaImportResultViewModel } from './types.ts'
 
 interface MediaImportResultScreenProps {
-  result: MediaImportResultViewModel
   onStartPractice: () => void
   onBackToStart: () => void
 }
 
 export function MediaImportResultScreen({
-  result,
   onStartPractice,
   onBackToStart,
 }: MediaImportResultScreenProps) {
-  const missingLabel = formatPlNumber(result.questionsBWithoutMedia)
+  const missingLabel = formatPlNumber(FIGMA_RESULT_QUESTIONS_B_WITHOUT_MEDIA)
 
   return (
     <>
@@ -39,13 +38,13 @@ export function MediaImportResultScreen({
         <div className="figma-import-media__summary-row">
           <p className="figma-import-media__summary-label">Znalezione obrazy</p>
           <p className="figma-import-media__summary-value">
-            {formatPlNumber(result.imagesFound)}
+            {formatPlNumber(FIGMA_RESULT_IMAGES_FOUND)}
           </p>
         </div>
         <div className="figma-import-media__summary-row">
           <p className="figma-import-media__summary-label">Zapisane klipy</p>
           <p className="figma-import-media__summary-value">
-            {formatPlNumber(result.clipsStored)}
+            {formatPlNumber(FIGMA_RESULT_CLIPS_STORED)}
           </p>
         </div>
         <div className="figma-import-media__summary-row">
@@ -55,25 +54,23 @@ export function MediaImportResultScreen({
       </section>
 
       <p className="figma-import-media__footnote">
-        Wynik importu · katalog z {result.catalogDateLabel}
+        {FIGMA_RESULT_FOOTNOTE_LINE}
         <br />
-        Liczby plików nie oznaczają liczby pytań.
+        {FIGMA_RESULT_FOOTNOTE_SECOND}
       </p>
 
-      {result.questionsBWithoutMedia > 0 && (
-        <div className="figma-import-media__callout">
-          <IconInfo />
-          <div>
-            <p className="figma-import-media__callout-title">
-              {missingLabel} pytań bez użytecznych mediów
-            </p>
-            <p className="figma-import-media__callout-body">
-              Brakujące lub nieczytelne pliki nie blokują ćwiczeń. Przy takim pytaniu pokażemy
-              informację o braku materiału.
-            </p>
-          </div>
+      <div className="figma-import-media__callout">
+        <IconInfo />
+        <div>
+          <p className="figma-import-media__callout-title">
+            {missingLabel} pytań bez użytecznych mediów
+          </p>
+          <p className="figma-import-media__callout-body">
+            Brakujące lub nieczytelne pliki nie blokują ćwiczeń. Przy takim pytaniu pokażemy
+            informację o braku materiału.
+          </p>
         </div>
-      )}
+      </div>
 
       <div className="figma-import-media__actions">
         <button
@@ -92,11 +89,6 @@ export function MediaImportResultScreen({
           Wróć na start
         </button>
       </div>
-
-      <p className="figma-import-media__privacy">
-        <IconSmartphone />
-        Bez konta. Postępy tylko na tym telefonie.
-      </p>
     </>
   )
 }

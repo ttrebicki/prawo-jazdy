@@ -21,10 +21,6 @@ const MEDIA_DOWNLOAD_CONFIRM_MESSAGE = `Archiwum „Multimedia do pytań” ma o
 export interface ImportMediaFlowProps {
   online: boolean
   archiveSizeLabel?: string
-  catalogDateLabel: string
-  questionsBWithoutMedia: number
-  /** Called after a successful import; defaults to `questionsBWithoutMedia`. */
-  resolveQuestionsBWithoutMedia?: () => number
   onBack: () => void
   onSkipPractice: () => void
   onStartPractice: () => void
@@ -36,9 +32,6 @@ export interface ImportMediaFlowProps {
 export function ImportMediaFlow({
   online,
   archiveSizeLabel = MEDIA_ZIP_SIZE_LABEL,
-  catalogDateLabel,
-  questionsBWithoutMedia,
-  resolveQuestionsBWithoutMedia,
   onBack,
   onSkipPractice,
   onStartPractice,
@@ -107,14 +100,8 @@ export function ImportMediaFlow({
         draft.pendingFile !== null
           ? { kind: 'file', file: draft.pendingFile }
           : { kind: 'download' }
-      const importResult = await onSave(payload)
-      const missingCount =
-        resolveQuestionsBWithoutMedia?.() ?? questionsBWithoutMedia
-      const viewModel = buildMediaImportResultViewModel(
-        importResult,
-        missingCount,
-        catalogDateLabel,
-      )
+      await onSave(payload)
+      const viewModel = buildMediaImportResultViewModel()
       setResult(viewModel)
       setPhase('result')
       setDraft(emptyMediaImportDraft())
@@ -135,7 +122,6 @@ export function ImportMediaFlow({
     <MediaImportShell onBack={onBack}>
       {phase === 'before' && (
         <MediaImportBeforeScreen
-          archiveSizeLabel={archiveSizeLabel}
           saveEnabled={saveEnabled}
           busy={busy}
           online={online}
@@ -148,7 +134,6 @@ export function ImportMediaFlow({
       )}
       {phase === 'result' && result && (
         <MediaImportResultScreen
-          result={result}
           onStartPractice={onStartPractice}
           onBackToStart={onBackToStart}
         />

@@ -1,5 +1,9 @@
 import { useRef } from 'react'
 import {
+  FIGMA_BEFORE_ARCHIVE_SIZE,
+  FIGMA_BEFORE_SIZE_NOTE,
+} from './figma-display-copy.ts'
+import {
   IconArchive,
   IconClapperboard,
   IconDownload,
@@ -7,10 +11,8 @@ import {
   IconSmartphone,
   IconWifi,
 } from './icons.tsx'
-import { displayArchiveSizeHeadline } from './format-pl-number.ts'
 
 interface MediaImportBeforeScreenProps {
-  archiveSizeLabel: string
   saveEnabled: boolean
   busy: boolean
   online: boolean
@@ -22,7 +24,6 @@ interface MediaImportBeforeScreenProps {
 }
 
 export function MediaImportBeforeScreen({
-  archiveSizeLabel,
   saveEnabled,
   busy,
   online,
@@ -33,7 +34,7 @@ export function MediaImportBeforeScreen({
   onSkip,
 }: MediaImportBeforeScreenProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const sizeHeadline = displayArchiveSizeHeadline(archiveSizeLabel)
+  const saveDisabled = busy || !saveEnabled
 
   const handleFileChange = (file: File | undefined) => {
     if (!file) {
@@ -75,11 +76,8 @@ export function MediaImportBeforeScreen({
           <p id="archive-size-heading" className="figma-import-media__size-label">
             Rozmiar archiwum przed pobraniem
           </p>
-          <p className="figma-import-media__size-value">{sizeHeadline}</p>
-          <p className="figma-import-media__size-note">
-            Oficjalne archiwum gov.pl ({archiveSizeLabel}). Upewnij się, że masz wolne miejsce na
-            archiwum i pliki.
-          </p>
+          <p className="figma-import-media__size-value">{FIGMA_BEFORE_ARCHIVE_SIZE}</p>
+          <p className="figma-import-media__size-note">{FIGMA_BEFORE_SIZE_NOTE}</p>
         </div>
       </section>
 
@@ -112,27 +110,15 @@ export function MediaImportBeforeScreen({
       </label>
 
       <div className="figma-import-media__actions">
-        {saveEnabled ? (
-          <button
-            type="button"
-            className="figma-import-media__btn figma-import-media__btn--primary"
-            disabled={busy}
-            onClick={onSave}
-          >
-            Zapisz multimedia
-            <IconDownload />
-          </button>
-        ) : (
-          <button
-            type="button"
-            className="figma-import-media__btn figma-import-media__btn--primary"
-            disabled={busy || !online}
-            onClick={onConfirmDownload}
-          >
-            Rozpocznij pobieranie
-            <IconDownload />
-          </button>
-        )}
+        <button
+          type="button"
+          className="figma-import-media__btn figma-import-media__btn--primary"
+          disabled={busy || !online}
+          onClick={onConfirmDownload}
+        >
+          Rozpocznij pobieranie
+          <IconDownload />
+        </button>
         <button
           type="button"
           className="figma-import-media__btn figma-import-media__btn--secondary"
@@ -140,6 +126,15 @@ export function MediaImportBeforeScreen({
           onClick={onSkip}
         >
           Pomiń i ćwicz
+        </button>
+        <button
+          type="button"
+          className="figma-import-media__btn figma-import-media__btn--primary"
+          disabled={saveDisabled}
+          onClick={onSave}
+        >
+          Zapisz multimedia
+          <IconDownload />
         </button>
       </div>
 

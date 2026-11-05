@@ -12,19 +12,27 @@ export async function runMediaImportSave(
   studyApp: StudyApp,
   payload: MediaImportSavePayload,
 ): Promise<MediaImportSaveResult> {
-  if (payload.kind === 'file') {
-    const result = await importZipImagesFromFile(payload.file)
+  const persist = async (
+    result: Awaited<ReturnType<typeof importZipImagesFromFile>>,
+  ): Promise<MediaImportSaveResult> => {
     await studyApp.refreshMediaIndex()
-    return result
+    return {
+      stored: result.stored,
+      skipped: result.skipped,
+      /** WMV gap markers in storage — not the „Zapisane klipy” figure on the result screen. */
+      wmvGaps: result.wmvGaps,
+    }
+  }
+
+  if (payload.kind === 'file') {
+    return persist(await importZipImagesFromFile(payload.file))
   }
 
   const response = await fetch(OFFICIAL_MEDIA_ZIP_URL)
   if (!response.ok) {
     throw new Error(`Serwer zwrócił ${response.status}`)
   }
-  const result = await importZipImagesFromResponse(response)
-  await studyApp.refreshMediaIndex()
-  return result
+  return persist(await importZipImagesFromResponse(response))
 }
 
 export function countCategoryBWithoutViewableMedia(studyApp: StudyApp): number {
