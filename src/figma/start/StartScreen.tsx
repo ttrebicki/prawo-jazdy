@@ -1,20 +1,23 @@
 import { useCallback, useMemo, useState } from 'react'
+import { ACTIVE_CATEGORY } from '../../domain/types.ts'
 import {
   MOCK_EXAM_LOCK_REASON,
   START_LOCKED_CATEGORY_CODES,
   START_LOCKED_CATEGORY_REASON,
 } from './lockedCategories.ts'
 import {
-  START_SAMPLE_CATALOG_LINE_ONE,
-  START_SAMPLE_CATALOG_LINE_TWO,
   START_SAMPLE_MISTAKES,
   START_SAMPLE_PRACTICE_ANSWERS,
+  buildStartCatalogLineOne,
+  buildStartCatalogLineTwo,
 } from './sampleCopy.ts'
 import './start.css'
 import { getStartThemeAssets, type StartTheme } from './themeAssets.ts'
 import type { StartScreenProps } from './types.ts'
 
 const THEME_STORAGE_KEY = 'figma-start-theme'
+
+const countFormat = new Intl.NumberFormat('pl-PL')
 
 function readStoredTheme(fallback: StartTheme): StartTheme {
   if (typeof window === 'undefined') {
@@ -38,23 +41,38 @@ function StartIcon({ src, sizeClass }: IconProps) {
 }
 
 export function StartScreen({
-  bank: _bank,
+  bank,
   progress: _progress,
-  hasImageOnDevice: _hasImageOnDevice,
+  hasImageOnDevice,
   onPractice,
   onMistakes,
   onImport,
   onImportMedia,
   initialTheme = 'light',
 }: StartScreenProps) {
-  void _bank
   void _progress
-  void _hasImageOnDevice
 
   const [theme, setTheme] = useState<StartTheme>(() =>
     readStoredTheme(initialTheme),
   )
   const assets = useMemo(() => getStartThemeAssets(theme), [theme])
+
+  const meta = bank.getCatalogMeta()
+  const totalB = bank.countByCategory(ACTIVE_CATEGORY)
+  const missingMedia = bank.countMissingDisplayableMedia(
+    ACTIVE_CATEGORY,
+    hasImageOnDevice,
+  )
+
+  const catalogLineOne = useMemo(
+    () => buildStartCatalogLineOne(meta.lastModified),
+    [meta.lastModified],
+  )
+
+  const catalogLineTwo = useMemo(
+    () => buildStartCatalogLineTwo(totalB, missingMedia, countFormat),
+    [missingMedia, totalB],
+  )
 
   const toggleTheme = useCallback(() => {
     setTheme((current) => {
@@ -193,8 +211,8 @@ export function StartScreen({
             </button>
           </div>
           <div className="figma-start__catalog-meta">
-            <p>{START_SAMPLE_CATALOG_LINE_ONE}</p>
-            <p>{START_SAMPLE_CATALOG_LINE_TWO}</p>
+            <p>{catalogLineOne}</p>
+            <p>{catalogLineTwo}</p>
           </div>
           <button
             type="button"
