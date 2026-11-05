@@ -1,5 +1,6 @@
 import { formatUserAnswerLabel, type UserAnswer } from '../../domain/progress-store.ts'
 import type { QuestionRecord } from '../../domain/types.ts'
+import { ExplanationBlock } from './ExplanationBlock.tsx'
 
 interface FeedbackPanelProps {
   question: QuestionRecord
@@ -48,14 +49,7 @@ export function FeedbackPanel({
           Bez obrazu lub klipu odpowiedź nie jest zaliczana jako opanowanie.
         </p>
       )}
-      {whyText ? (
-        <section className="practice-why" aria-labelledby="practice-why-title">
-          <h2 id="practice-why-title" className="practice-why-title">
-            Dlaczego
-          </h2>
-          <p className="practice-why-text">{whyText}</p>
-        </section>
-      ) : null}
+      {whyText ? <ExplanationBlock text={whyText} /> : null}
       <button type="button" className="practice-btn" onClick={onContinue}>
         Dalej
       </button>

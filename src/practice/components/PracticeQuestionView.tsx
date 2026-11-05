@@ -6,6 +6,7 @@ import {
 } from '../../domain/progress-store.ts'
 import type { QuestionRecord } from '../../domain/types.ts'
 import { AnswerButtons } from './AnswerButtons.tsx'
+import { ExplanationBlock } from './ExplanationBlock.tsx'
 import { FeedbackPanel } from './FeedbackPanel.tsx'
 import { QuestionMedia } from './QuestionMedia.tsx'
 import { useQuestionMedia } from '../hooks/useQuestionMedia.ts'
@@ -27,6 +28,7 @@ export function PracticeQuestionView({
   const [picked, setPicked] = useState<UserAnswer | null>(null)
   const [revealed, setRevealed] = useState(false)
   const [whyText, setWhyText] = useState<string | null>(null)
+  const [whyExpanded, setWhyExpanded] = useState(false)
 
   const { media, mediaViewable, mediaUrl } = useQuestionMedia(
     question,
@@ -36,14 +38,7 @@ export function PracticeQuestionView({
   useEffect(() => {
     setPicked(null)
     setRevealed(false)
-    setWhyText(null)
-  }, [question.number])
-
-  useEffect(() => {
-    if (!revealed) {
-      setWhyText(null)
-      return
-    }
+    setWhyExpanded(false)
     let cancelled = false
     void deps.getExplanation(question.number).then((text) => {
       if (cancelled) {
@@ -55,7 +50,7 @@ export function PracticeQuestionView({
     return () => {
       cancelled = true
     }
-  }, [deps, question.number, revealed])
+  }, [deps, question.number])
 
   const correctKey = useMemo(() => getCorrectAnswerKey(question), [question])
 
@@ -73,6 +68,8 @@ export function PracticeQuestionView({
       mediaViewable,
     })
   }
+
+  const showPreAnswerWhy = !revealed && whyText !== null
 
   return (
     <div className="practice-screen">
@@ -99,11 +96,26 @@ export function PracticeQuestionView({
 
       <div className="practice-thumb-zone">
         {!revealed || !picked ? (
-          <AnswerButtons
-            question={question}
-            disabled={revealed}
-            onPick={(answer) => void submit(answer)}
-          />
+          <>
+            <AnswerButtons
+              question={question}
+              disabled={revealed}
+              onPick={(answer) => void submit(answer)}
+            />
+            {showPreAnswerWhy &&
+              (whyExpanded ? (
+                <ExplanationBlock text={whyText} />
+              ) : (
+                <button
+                  type="button"
+                  className="practice-btn practice-btn-secondary practice-why-toggle"
+                  aria-expanded={false}
+                  onClick={() => setWhyExpanded(true)}
+                >
+                  Dlaczego
+                </button>
+              ))}
+          </>
         ) : (
           <FeedbackPanel
             question={question}

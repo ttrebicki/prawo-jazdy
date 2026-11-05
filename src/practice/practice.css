@@ -222,6 +222,10 @@
   color: var(--practice-text, #f8fafc);
 }
 
+.practice-why-toggle {
+  margin-top: 0.25rem;
+}
+
 .practice-filters {
   margin: 0;
   padding: 0;
