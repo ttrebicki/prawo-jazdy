@@ -45,7 +45,6 @@
 
 .practice-media {
   width: 100%;
-  aspect-ratio: 16 / 10;
   flex-shrink: 0;
   background: var(--practice-media-bg, #020617);
   border-radius: var(--practice-radius, 0.75rem);
@@ -55,9 +54,17 @@
   justify-content: center;
 }
 
-.practice-media img {
+.practice-media:has(img),
+.practice-media:has(video) {
+  height: clamp(240px, calc(100dvh - 380px), 58dvh);
+  min-height: 240px;
+}
+
+.practice-media img,
+.practice-media video {
   width: 100%;
   height: 100%;
+  max-height: none;
   object-fit: contain;
 }
 

@@ -138,13 +138,13 @@ export function FigmaPracticeQuestionView({
           progressRatio={progressRatio}
         />
 
+        {hasMediaArea ? (
+          <PracticeMediaCard assets={assets} mediaUrl={mediaUrl} status={mediaStatus} />
+        ) : null}
+
         <div className="figma-wide__practice-grid">
           <div className="figma-wide__practice-main">
-            {hasMediaArea ? (
-              <PracticeMediaCard assets={assets} mediaUrl={mediaUrl} status={mediaStatus} />
-            ) : (
-              <PracticeTextOnlyHint assets={assets} />
-            )}
+            {hasMediaArea ? null : <PracticeTextOnlyHint assets={assets} />}
 
             <PracticeQuestionCopy prompt={question.prompt} />
 

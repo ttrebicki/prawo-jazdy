@@ -162,7 +162,6 @@ input[type='file'] {
 
 .media-box {
   width: 100%;
-  aspect-ratio: 16 / 10;
   background: #020617;
   border-radius: var(--radius);
   overflow: hidden;
@@ -171,9 +170,17 @@ input[type='file'] {
   justify-content: center;
 }
 
-.media-box img {
+.media-box:has(img),
+.media-box:has(video) {
+  height: clamp(240px, calc(100dvh - 380px), 58dvh);
+  min-height: 240px;
+}
+
+.media-box img,
+.media-box video {
   width: 100%;
   height: 100%;
+  max-height: none;
   object-fit: contain;
 }
 

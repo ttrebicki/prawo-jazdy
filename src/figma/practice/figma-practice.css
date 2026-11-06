@@ -1,7 +1,7 @@
 .fp {
   --fp-width: 402px;
   --fp-font: 'Inter', 'Segoe UI', system-ui, sans-serif;
-  width: var(--fp-width);
+  width: 100%;
   max-width: 100%;
   margin: 0 auto;
   font-family: var(--fp-font);
@@ -220,10 +220,21 @@
   overflow: hidden;
 }
 
-.fp-media-card > img {
+.fp-media-card:has(> img),
+.fp-media-card:has(> video) {
+  width: 100%;
+  height: clamp(240px, calc(100dvh - 380px), 58dvh);
+  min-height: 240px;
+  padding: 0;
+  gap: 0;
+}
+
+.fp-media-card > img,
+.fp-media-card > video {
   width: 100%;
   height: 100%;
-  max-height: 140px;
+  max-width: 100%;
+  max-height: none;
   object-fit: contain;
 }
 
