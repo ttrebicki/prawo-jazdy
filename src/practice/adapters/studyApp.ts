@@ -9,6 +9,7 @@ export function practiceDepsFromStudyApp(app: StudyApp): PracticeDependencies {
     progress: app.progress,
     category: ACTIVE_CATEGORY,
     mediaLookup: app.mediaLookup,
+    fetchQuestionImage: (filename, onProgress) => app.fetchQuestionImage(filename, onProgress),
     hasImageOnDevice: app.hasImageOnDevice,
     recordAnswer: async (input) => {
       await app.recordAnswer(input)

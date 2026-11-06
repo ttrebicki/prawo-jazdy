@@ -1,7 +1,8 @@
 import { useRef, useState } from 'react'
 import { useFigmaLayoutOptional } from '../layout/FigmaLayoutContext.tsx'
+import { getShowOpenFilePicker } from '../../storage/media-zip-library.ts'
+import { ZipDirectoryUnreadableError } from '../../storage/zip-directory.ts'
 import { MediaImportWideResultScreen } from './MediaImportWideResultScreen.tsx'
-import { buildMediaImportResultViewModel } from './build-result-view-model.ts'
 import { MediaImportBeforeScreen } from './MediaImportBeforeScreen.tsx'
 import { MediaImportWideBeforeScreen } from './MediaImportWideBeforeScreen.tsx'
 import { MediaImportResultScreen } from './MediaImportResultScreen.tsx'
@@ -12,12 +13,7 @@ import {
   OFFICIAL_MEDIA_ZIP_URL,
 } from './media-zip-file.ts'
 import type { MediaImportProgressUpdate } from './run-media-import-save.ts'
-import { IncompleteMediaZipError } from '../../storage/zip-read.ts'
-import type {
-  MediaImportResultViewModel,
-  MediaImportSavePayload,
-  MediaImportSaveResult,
-} from './types.ts'
+import type { MediaImportSavePayload, MediaImportSaveResult } from './types.ts'
 import './import-media.css'
 
 export interface ImportMediaFlowProps {
@@ -48,7 +44,7 @@ export function ImportMediaFlow({
   const [statusMessage, setStatusMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [officialUrlHint, setOfficialUrlHint] = useState(false)
-  const [result, setResult] = useState<MediaImportResultViewModel | null>(null)
+  const [linked, setLinked] = useState<{ fileName: string; entryCount: number } | null>(null)
 
   const reportError = (message: string | null, showOfficialUrl = false) => {
     setError(message)
@@ -56,26 +52,25 @@ export function ImportMediaFlow({
     onError?.(message)
   }
 
-  const importZipFile = async (file: File) => {
+  const linkZipFile = async (file: File, handle: FileSystemFileHandle | null) => {
     setBusy(true)
     reportError(null)
-    setStatusMessage(`Import z archiwum: ${file.name}`)
+    setStatusMessage(`Podpinam archiwum: ${file.name}`)
     try {
-      await onSave({ kind: 'file', file }, (update) => {
+      const saved = await onSave({ kind: 'file', file, handle }, (update) => {
         setStatusMessage(update.message)
       })
-      const viewModel = buildMediaImportResultViewModel()
-      setResult(viewModel)
+      setLinked({ fileName: saved.linkedName, entryCount: saved.entryCount })
       setPhase('result')
       setStatusMessage(null)
     } catch (e) {
-      const incomplete = e instanceof IncompleteMediaZipError
+      const incomplete = e instanceof ZipDirectoryUnreadableError
       reportError(
         incomplete
           ? e.message
           : e instanceof Error
             ? e.message
-            : 'Import multimediów nie powiódł się. Poprzednie pliki pozostają.',
+            : 'Nie udało się podpiąć archiwum. Pytania bez obrazu dalej działają.',
         incomplete,
       )
       setStatusMessage(null)
@@ -105,7 +100,7 @@ export function ImportMediaFlow({
     anchor.remove()
   }
 
-  const handlePickFile = (file: File | undefined) => {
+  const handlePickFile = (file: File | undefined, handle: FileSystemFileHandle | null) => {
     if (!file || busy) {
       return
     }
@@ -114,14 +109,41 @@ export function ImportMediaFlow({
       setStatusMessage(null)
       return
     }
-    void importZipFile(file)
+    void linkZipFile(file, handle)
   }
 
   const openFilePicker = () => {
     if (busy) {
       return
     }
-    fileInputRef.current?.click()
+    const picker = getShowOpenFilePicker()
+    if (!picker) {
+      fileInputRef.current?.click()
+      return
+    }
+    void picker({
+      multiple: false,
+      excludeAcceptAllOption: false,
+      types: [
+        {
+          description: 'Archiwum ZIP',
+          accept: { 'application/zip': ['.zip'] },
+        },
+      ],
+    })
+      .then(async ([handle]) => {
+        if (!handle) {
+          return
+        }
+        const file = await handle.getFile()
+        handlePickFile(file, handle)
+      })
+      .catch((error: unknown) => {
+        if (error instanceof DOMException && error.name === 'AbortError') {
+          return
+        }
+        fileInputRef.current?.click()
+      })
   }
 
   const layout = useFigmaLayoutOptional()
@@ -132,7 +154,7 @@ export function ImportMediaFlow({
       accept=".zip,application/zip,application/x-zip-compressed"
       hidden
       onChange={(event) => {
-        handlePickFile(event.target.files?.[0])
+        handlePickFile(event.target.files?.[0], null)
         event.target.value = ''
       }}
     />
@@ -154,8 +176,10 @@ export function ImportMediaFlow({
       <>
         {fileInput}
         {phase === 'before' && <MediaImportWideBeforeScreen {...beforeProps} />}
-        {phase === 'result' && result && (
+        {phase === 'result' && linked && (
           <MediaImportWideResultScreen
+            fileName={linked.fileName}
+            entryCount={linked.entryCount}
             onStartPractice={onStartPractice}
             onBackToStart={onBackToStart}
           />
@@ -168,8 +192,10 @@ export function ImportMediaFlow({
     <MediaImportShell onBack={onBack}>
       {fileInput}
       {phase === 'before' && <MediaImportBeforeScreen {...beforeProps} />}
-      {phase === 'result' && result && (
+      {phase === 'result' && linked && (
         <MediaImportResultScreen
+          fileName={linked.fileName}
+          entryCount={linked.entryCount}
           onStartPractice={onStartPractice}
           onBackToStart={onBackToStart}
         />
@@ -178,4 +204,8 @@ export function ImportMediaFlow({
   )
 }
 
-export type { MediaImportSavePayload, MediaImportSaveResult, MediaImportResultViewModel }
+export type {
+  MediaImportSavePayload,
+  MediaImportSaveResult,
+  MediaImportResultViewModel,
+} from './types.ts'

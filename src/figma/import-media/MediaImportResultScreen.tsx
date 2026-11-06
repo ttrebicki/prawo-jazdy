@@ -1,24 +1,21 @@
-import {
-  FIGMA_RESULT_CLIPS_STORED,
-  FIGMA_RESULT_FOOTNOTE_LINE,
-  FIGMA_RESULT_FOOTNOTE_SECOND,
-  FIGMA_RESULT_IMAGES_FOUND,
-  FIGMA_RESULT_QUESTIONS_B_WITHOUT_MEDIA,
-} from './figma-display-copy.ts'
 import { IconArrowRight, IconFolderCheck, IconInfo } from './icons.tsx'
 import { formatPlNumber } from './format-pl-number.ts'
 import { MediaImportPrivacyLine } from './MediaImportPrivacyLine.tsx'
 
 interface MediaImportResultScreenProps {
+  fileName: string
+  entryCount: number
   onStartPractice: () => void
   onBackToStart: () => void
 }
 
 export function MediaImportResultScreen({
+  fileName,
+  entryCount,
   onStartPractice,
   onBackToStart,
 }: MediaImportResultScreenProps) {
-  const missingLabel = formatPlNumber(FIGMA_RESULT_QUESTIONS_B_WITHOUT_MEDIA)
+  const entryLabel = formatPlNumber(entryCount)
 
   return (
     <>
@@ -28,47 +25,30 @@ export function MediaImportResultScreen({
 
       <div className="figma-import-media__intro">
         <p className="figma-import-media__eyebrow">KROK 2 Z 2 · GOTOWE</p>
-        <h2 className="figma-import-media__headline">Materiały na miejscu</h2>
+        <h2 className="figma-import-media__headline">Archiwum podpięte</h2>
         <p className="figma-import-media__lead">
-          Pliki zostały dopasowane do katalogu. Możesz korzystać z nich bez połączenia z
-          internetem.
+          Zdjęcia zostają w wybranym pliku ZIP. Przy pytaniu wczytamy tylko ten jeden plik.
         </p>
       </div>
 
-      <section className="figma-import-media__summary" aria-label="Podsumowanie multimediów">
+      <section className="figma-import-media__summary" aria-label="Podpięte archiwum">
         <div className="figma-import-media__summary-row">
-          <p className="figma-import-media__summary-label">Znalezione obrazy</p>
-          <p className="figma-import-media__summary-value">
-            {formatPlNumber(FIGMA_RESULT_IMAGES_FOUND)}
-          </p>
+          <p className="figma-import-media__summary-label">Plik</p>
+          <p className="figma-import-media__summary-value">{fileName}</p>
         </div>
         <div className="figma-import-media__summary-row">
-          <p className="figma-import-media__summary-label">Zapisane klipy</p>
-          <p className="figma-import-media__summary-value">
-            {formatPlNumber(FIGMA_RESULT_CLIPS_STORED)}
-          </p>
-        </div>
-        <div className="figma-import-media__summary-row">
-          <p className="figma-import-media__summary-label">Pytania B nadal bez mediów</p>
-          <p className="figma-import-media__summary-value">{missingLabel}</p>
+          <p className="figma-import-media__summary-label">Pozycje w spisie</p>
+          <p className="figma-import-media__summary-value">{entryLabel}</p>
         </div>
       </section>
-
-      <p className="figma-import-media__footnote">
-        {FIGMA_RESULT_FOOTNOTE_LINE}
-        <br />
-        {FIGMA_RESULT_FOOTNOTE_SECOND}
-      </p>
 
       <div className="figma-import-media__callout">
         <IconInfo />
         <div>
-          <p className="figma-import-media__callout-title">
-            {missingLabel} pytań bez użytecznych mediów
-          </p>
+          <p className="figma-import-media__callout-title">Bez rozpakowywania całości</p>
           <p className="figma-import-media__callout-body">
-            Brakujące lub nieczytelne pliki nie blokują ćwiczeń. Przy takim pytaniu pokażemy
-            informację o braku materiału.
+            Jeśli któregoś pliku nie ma albo jest ucięty, to pytanie pokaże błąd. Reszta
+            ćwiczeń zostaje dostępna.
           </p>
         </div>
       </div>

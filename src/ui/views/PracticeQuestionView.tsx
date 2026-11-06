@@ -4,6 +4,7 @@ import {
   isMediaViewable,
   resolveMediaForQuestion,
 } from '../../domain/question-bank.ts'
+import { getMediaGapMessage } from '../../practice/mediaMessages.ts'
 import {
   formatUserAnswerLabel,
   getCorrectAnswerKey,
@@ -26,13 +27,51 @@ export function PracticeQuestionView({
   onBack,
 }: PracticeQuestionViewProps) {
   const [media, setMedia] = useState<MediaResolution | null>(null)
+  const [progressLabel, setProgressLabel] = useState<string | null>(null)
   const [picked, setPicked] = useState<UserAnswer | null>(null)
   const [revealed, setRevealed] = useState(false)
 
   useEffect(() => {
+    let cancelled = false
     setPicked(null)
     setRevealed(false)
-    void resolveMediaForQuestion(question, app.mediaLookup).then(setMedia)
+    setMedia(null)
+    const filename = question.mediaFilename
+    if (question.mediaKind === 'image' && filename) {
+      setProgressLabel('Wczytywanie pliku z archiwum… 0%')
+      void app
+        .fetchQuestionImage(filename, (loaded, total) => {
+          if (cancelled) {
+            return
+          }
+          const percent = total > 0 ? Math.min(100, Math.round((loaded / total) * 100)) : 0
+          setProgressLabel(`Wczytywanie pliku z archiwum… ${percent}%`)
+        })
+        .then((read) => {
+          if (cancelled) {
+            return
+          }
+          setProgressLabel(null)
+          setMedia({
+            kind: 'image',
+            reason: read.reason,
+            blob: read.blob,
+            filename,
+          })
+        })
+      return () => {
+        cancelled = true
+      }
+    }
+    setProgressLabel(null)
+    void resolveMediaForQuestion(question, app.mediaLookup).then((resolved) => {
+      if (!cancelled) {
+        setMedia(resolved)
+      }
+    })
+    return () => {
+      cancelled = true
+    }
   }, [app, question])
 
   const correctKey = useMemo(() => getCorrectAnswerKey(question), [question])
@@ -69,20 +108,7 @@ export function PracticeQuestionView({
     })
   }
 
-  const mediaGapMessage = () => {
-    if (!question.mediaFilename) {
-      return null
-    }
-    if (media?.reason === 'video_wmv') {
-      return 'Klip WMV — ta przeglądarka nie odtwarza tego formatu. Odpowiedź bez obrazu nie liczy się jako opanowanie.'
-    }
-    if (media?.reason === 'missing_file') {
-      return 'Brak pliku graficznego na urządzeniu. Zaimportuj archiwum ze zdjęciami albo kontynuuj bez obrazu.'
-    }
-    return null
-  }
-
-  const gap = mediaGapMessage()
+  const gap = progressLabel ?? getMediaGapMessage(question, media)
 
   return (
     <div className="stack">

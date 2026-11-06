@@ -4,6 +4,7 @@ import type {
   RecordAnswerInput,
 } from '../domain/progress-store.ts'
 import type { CategoryCode } from '../domain/types.ts'
+import type { QuestionImageRead } from '../storage/media-zip-library.ts'
 
 /** Dependencies injected from the app shell; practice does not touch storage. */
 export interface PracticeDependencies {
@@ -11,6 +12,10 @@ export interface PracticeDependencies {
   progress: ProgressStore
   category: CategoryCode
   mediaLookup: MediaLookup
+  fetchQuestionImage: (
+    filename: string,
+    onProgress?: (loaded: number, total: number) => void,
+  ) => Promise<QuestionImageRead>
   hasImageOnDevice: (filename: string) => boolean
   recordAnswer: (input: RecordAnswerInput) => Promise<void>
   getExplanation: (officialNumber: string) => Promise<string | null>

@@ -1,11 +1,13 @@
 export type MediaImportSavePayload =
-  | { kind: 'file'; file: File }
+  | { kind: 'file'; file: File; handle?: FileSystemFileHandle | null }
   | { kind: 'download' }
 
 export type MediaImportSaveResult = {
   stored: number
   skipped: number
   wmvGaps: number
+  linkedName: string
+  entryCount: number
 }
 
 export type MediaImportResultViewModel = {

@@ -1,14 +1,12 @@
 import type { StudyApp } from '../../app/study-app.ts'
 import { ACTIVE_CATEGORY } from '../../domain/types.ts'
-import { importZipImagesFromFile } from '../../storage/app-database.ts'
-import { formatZipReadProgress } from '../../storage/zip-read.ts'
 import type { MediaImportSavePayload, MediaImportSaveResult } from './types.ts'
 
 export type MediaImportProgressUpdate = {
   message: string
 }
 
-/** Imports a user-selected ZIP already on disk (no in-app gov.pl download). */
+/** Links a ZIP that is already on disk. Does not unpack or upload the archive. */
 export async function runMediaImportSave(
   studyApp: StudyApp,
   payload: MediaImportSavePayload,
@@ -16,19 +14,19 @@ export async function runMediaImportSave(
 ): Promise<MediaImportSaveResult> {
   if (payload.kind !== 'file') {
     throw new Error(
-      'Import multimediów wymaga wskazania pliku ZIP pobranego z gov.pl.',
+      'Wskaż plik ZIP z dysku. Aplikacja nie pobiera całego archiwum.',
     )
   }
 
-  onProgress?.({ message: 'Odczyt archiwum… 0%.' })
-  const result = await importZipImagesFromFile(payload.file, (progress) => {
-    onProgress?.({ message: formatZipReadProgress(progress) })
+  const linked = await studyApp.attachMediaZip(payload.file, payload.handle ?? null, (message) => {
+    onProgress?.({ message })
   })
-  await studyApp.refreshMediaIndex()
   return {
-    stored: result.stored,
-    skipped: result.skipped,
-    wmvGaps: result.wmvGaps,
+    stored: 0,
+    skipped: 0,
+    wmvGaps: 0,
+    linkedName: linked.fileName,
+    entryCount: linked.entryCount,
   }
 }
 

@@ -3,11 +3,12 @@ import type { FigmaPracticeAssets } from '../assets.ts'
 interface PracticeMediaCardProps {
   assets: FigmaPracticeAssets
   mediaUrl?: string | null
+  status?: string | null
 }
 
-export function PracticeMediaCard({ assets, mediaUrl }: PracticeMediaCardProps) {
+export function PracticeMediaCard({ assets, mediaUrl, status }: PracticeMediaCardProps) {
   return (
-    <div className="fp-media-card">
+    <div className="fp-media-card" aria-live="polite">
       {mediaUrl ? (
         <img src={mediaUrl} alt="Materiał poglądowy do pytania" />
       ) : (
@@ -16,7 +17,7 @@ export function PracticeMediaCard({ assets, mediaUrl }: PracticeMediaCardProps) 
             <img className="fp-icon fp-icon--25" src={assets.image} alt="" />
           </div>
           <p className="fp-media-title">Materiał poglądowy</p>
-          <p className="fp-media-sub">Makieta · bez sytuacji drogowej</p>
+          <p className="fp-media-sub">{status ?? 'Makieta · bez sytuacji drogowej'}</p>
         </>
       )}
     </div>

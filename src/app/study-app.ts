@@ -7,28 +7,20 @@ import { ProgressStore } from '../domain/progress-store.ts'
 import type { CatalogMeta, ImportStats, QuestionProgress } from '../domain/types.ts'
 import { ACTIVE_CATEGORY } from '../domain/types.ts'
 import {
-  OFFICIAL_MEDIA_ZIP_URL,
-} from '../domain/constants.ts'
-import {
-  countMediaFiles,
   deleteProgressEntry,
-  getMediaFile,
   getQuestionExplanation,
-  hasMediaFile,
-  importZipImagesFromFile,
-  importZipImagesFromResponse,
   loadCatalog,
   loadProgress,
   saveCatalog,
   saveProgressEntry,
   saveQuestionExplanation,
 } from '../storage/app-database.ts'
-import type { ZipReadProgress } from '../storage/zip-read.ts'
+import { mediaZipLibrary } from '../storage/media-zip-library.ts'
+import type { QuestionImageRead } from '../storage/media-zip-library.ts'
 
 export class StudyApp {
   readonly bank = new QuestionBank()
   readonly progress = new ProgressStore()
-  private mediaCache = new Map<string, boolean>()
 
   async hydrate(): Promise<void> {
     const catalog = await loadCatalog()
@@ -40,7 +32,7 @@ export class StudyApp {
       })
     }
     this.progress.load(await loadProgress())
-    this.mediaCache.clear()
+    await mediaZipLibrary.restoreSaved(false).catch(() => false)
   }
 
   async importWorkbook(
@@ -85,44 +77,47 @@ export class StudyApp {
     if (!filename) {
       return null
     }
-    return getMediaFile(filename)
+    const read = await mediaZipLibrary.readQuestionImage(filename)
+    return read.blob
   }
 
-  hasImageOnDevice = (filename: string): boolean => {
-    return this.mediaCache.get(filename) ?? false
-  }
+  fetchQuestionImage = (
+    filename: string,
+    onProgress?: (loaded: number, total: number) => void,
+  ): Promise<QuestionImageRead> => mediaZipLibrary.readQuestionImage(filename, onProgress)
+
+  hasImageOnDevice = (filename: string): boolean => mediaZipLibrary.hasImage(filename)
 
   async refreshMediaIndex(): Promise<number> {
-    this.mediaCache.clear()
-    const catalog = this.bank.getSnapshot().questions
-    for (const q of catalog) {
-      if (q.mediaFilename && q.mediaKind === 'image') {
-        const exists = await hasMediaFile(q.mediaFilename)
-        this.mediaCache.set(q.mediaFilename, exists)
-      }
-    }
-    return countMediaFiles()
+    return mediaZipLibrary.entryCount
+  }
+
+  /** Links a local ZIP. Does not copy image bytes into the app. */
+  async attachMediaZip(
+    file: File,
+    handle: FileSystemFileHandle | null,
+    onProgress?: (message: string) => void,
+  ): Promise<{ entryCount: number; fileName: string }> {
+    await mediaZipLibrary.attach(file, handle, onProgress)
+    return { entryCount: mediaZipLibrary.entryCount, fileName: file.name }
+  }
+
+  /** User gesture: reopen the ZIP remembered with the File System Access API. */
+  async restoreMediaZip(): Promise<boolean> {
+    return mediaZipLibrary.restoreSaved(true)
   }
 
   async importMediaZip(
     file: File,
-    onProgress?: (progress: ZipReadProgress) => void,
   ): Promise<{ stored: number; skipped: number }> {
-    const result = await importZipImagesFromFile(file, onProgress)
-    await this.refreshMediaIndex()
-    return { stored: result.stored, skipped: result.skipped }
+    const linked = await this.attachMediaZip(file, null)
+    return { stored: linked.entryCount, skipped: 0 }
   }
 
-  async importOfficialMediaZip(
-    onProgress?: (progress: ZipReadProgress) => void,
-  ): Promise<{ stored: number; skipped: number }> {
-    const response = await fetch(OFFICIAL_MEDIA_ZIP_URL)
-    if (!response.ok) {
-      throw new Error(`Serwer zwrócił ${response.status}`)
-    }
-    const result = await importZipImagesFromResponse(response, onProgress)
-    await this.refreshMediaIndex()
-    return { stored: result.stored, skipped: result.skipped }
+  async importOfficialMediaZip(): Promise<{ stored: number; skipped: number }> {
+    throw new Error(
+      'Aplikacja nie pobiera całego archiwum. Pobierz plik w przeglądarce i wskaż go z dysku.',
+    )
   }
 
   getExplanation = async (officialNumber: string): Promise<string | null> => {

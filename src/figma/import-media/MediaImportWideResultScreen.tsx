@@ -1,26 +1,23 @@
 import { useFigmaLayout } from '../layout/FigmaLayoutContext.tsx'
-import {
-  FIGMA_RESULT_CLIPS_STORED,
-  FIGMA_RESULT_FOOTNOTE_LINE,
-  FIGMA_RESULT_FOOTNOTE_SECOND,
-  FIGMA_RESULT_IMAGES_FOUND,
-  FIGMA_RESULT_QUESTIONS_B_WITHOUT_MEDIA,
-} from './figma-display-copy.ts'
 import { IconArrowRight, IconFolderCheck, IconInfo } from './icons.tsx'
 import { formatPlNumber } from './format-pl-number.ts'
 
 interface MediaImportWideResultScreenProps {
+  fileName: string
+  entryCount: number
   onStartPractice: () => void
   onBackToStart: () => void
 }
 
 /** Desktop · Multimedia · wynik importu (15:12503) / Tablet · Multimedia · wynik importu (15:13474) */
 export function MediaImportWideResultScreen({
+  fileName,
+  entryCount,
   onStartPractice,
   onBackToStart,
 }: MediaImportWideResultScreenProps) {
   const { isDesktop } = useFigmaLayout()
-  const missingLabel = formatPlNumber(FIGMA_RESULT_QUESTIONS_B_WITHOUT_MEDIA)
+  const entryLabel = formatPlNumber(entryCount)
 
   return (
     <div
@@ -38,47 +35,30 @@ export function MediaImportWideResultScreen({
 
       <div className="figma-wide__intro-block">
         <p className="figma-wide__intro-eyebrow">KROK 2 Z 2 · GOTOWE</p>
-        <h1 className="figma-wide__intro-title">Materiały na miejscu</h1>
+        <h1 className="figma-wide__intro-title">Archiwum podpięte</h1>
         <p className="figma-wide__intro-lead">
-          Pliki zostały dopasowane do katalogu. Możesz korzystać z nich bez połączenia z
-          internetem.
+          Zdjęcia zostają w wybranym pliku ZIP. Przy pytaniu wczytamy tylko ten jeden plik.
         </p>
       </div>
 
       <div className="figma-wide__summary-card">
         <div className="figma-wide__summary-row">
-          <p className="figma-wide__summary-label">Znalezione obrazy</p>
-          <p className="figma-wide__summary-value">
-            {formatPlNumber(FIGMA_RESULT_IMAGES_FOUND)}
-          </p>
+          <p className="figma-wide__summary-label">Plik</p>
+          <p className="figma-wide__summary-value">{fileName}</p>
         </div>
         <div className="figma-wide__summary-row">
-          <p className="figma-wide__summary-label">Zapisane klipy</p>
-          <p className="figma-wide__summary-value">
-            {formatPlNumber(FIGMA_RESULT_CLIPS_STORED)}
-          </p>
-        </div>
-        <div className="figma-wide__summary-row">
-          <p className="figma-wide__summary-label">Pytania B nadal bez mediów</p>
-          <p className="figma-wide__summary-value">{missingLabel}</p>
+          <p className="figma-wide__summary-label">Pozycje w spisie</p>
+          <p className="figma-wide__summary-value">{entryLabel}</p>
         </div>
       </div>
-
-      <p className="figma-wide__hint">
-        {FIGMA_RESULT_FOOTNOTE_LINE}
-        <br />
-        {FIGMA_RESULT_FOOTNOTE_SECOND}
-      </p>
 
       <div className="figma-wide__callout">
         <IconInfo />
         <div>
-          <p className="figma-wide__callout-title">
-            {missingLabel} pytań bez użytecznych mediów
-          </p>
+          <p className="figma-wide__callout-title">Bez rozpakowywania całości</p>
           <p className="figma-wide__callout-text">
-            Brakujące lub nieczytelne pliki nie blokują ćwiczeń. Przy takim pytaniu pokażemy
-            informację o braku materiału.
+            Jeśli któregoś pliku nie ma albo jest ucięty, to pytanie pokaże błąd. Reszta
+            ćwiczeń zostaje dostępna.
           </p>
         </div>
       </div>

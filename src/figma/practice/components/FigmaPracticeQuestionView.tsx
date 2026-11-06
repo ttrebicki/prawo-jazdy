@@ -6,6 +6,7 @@ import {
 } from '../../../domain/progress-store.ts'
 import type { QuestionRecord } from '../../../domain/types.ts'
 import { displayExplanationText } from '../../../practice/explanationMessages.ts'
+import { getMediaGapMessage } from '../../../practice/mediaMessages.ts'
 import { useQuestionMedia } from '../../../practice/hooks/useQuestionMedia.ts'
 import type { PracticeDependencies } from '../../../practice/types.ts'
 import { figmaPracticeAssets } from '../assets.ts'
@@ -50,10 +51,12 @@ export function FigmaPracticeQuestionView({
     string | null | undefined
   >(undefined)
 
-  const { mediaViewable, mediaUrl } = useQuestionMedia(
+  const { media, mediaViewable, mediaUrl, progressLabel } = useQuestionMedia(
     question,
     deps.mediaLookup,
+    deps.fetchQuestionImage,
   )
+  const mediaStatus = progressLabel ?? getMediaGapMessage(question, media)
 
   useEffect(() => {
     setPendingAnswer(null)
@@ -138,7 +141,7 @@ export function FigmaPracticeQuestionView({
         <div className="figma-wide__practice-grid">
           <div className="figma-wide__practice-main">
             {hasMediaArea ? (
-              <PracticeMediaCard assets={assets} mediaUrl={mediaUrl} />
+              <PracticeMediaCard assets={assets} mediaUrl={mediaUrl} status={mediaStatus} />
             ) : (
               <PracticeTextOnlyHint assets={assets} />
             )}
@@ -218,7 +221,7 @@ export function FigmaPracticeQuestionView({
       />
 
       {hasMediaArea ? (
-        <PracticeMediaCard assets={assets} mediaUrl={mediaUrl} />
+        <PracticeMediaCard assets={assets} mediaUrl={mediaUrl} status={mediaStatus} />
       ) : (
         <PracticeTextOnlyHint assets={assets} />
       )}

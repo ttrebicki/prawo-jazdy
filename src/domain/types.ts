@@ -60,6 +60,8 @@ export type MediaAvailabilityReason =
   | 'none_needed'
   | 'available'
   | 'missing_file'
+  | 'truncated'
+  | 'not_attached'
   | 'video_wmv'
   | 'unsupported'
 
