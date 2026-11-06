@@ -17,6 +17,7 @@ import {
 } from '../storage/app-database.ts'
 import { mediaZipLibrary } from '../storage/media-zip-library.ts'
 import type { QuestionImageRead } from '../storage/media-zip-library.ts'
+import type { ClipLoadProgress } from '../storage/clip-progress.ts'
 
 export class StudyApp {
   readonly bank = new QuestionBank()
@@ -85,6 +86,11 @@ export class StudyApp {
     filename: string,
     onProgress?: (loaded: number, total: number) => void,
   ): Promise<QuestionImageRead> => mediaZipLibrary.readQuestionImage(filename, onProgress)
+
+  fetchQuestionClip = (
+    filename: string,
+    onProgress?: (progress: ClipLoadProgress) => void,
+  ): Promise<QuestionImageRead> => mediaZipLibrary.readQuestionClip(filename, onProgress)
 
   hasImageOnDevice = (filename: string): boolean => mediaZipLibrary.hasImage(filename)
 

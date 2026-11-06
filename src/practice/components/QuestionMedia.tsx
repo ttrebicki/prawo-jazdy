@@ -17,9 +17,15 @@ export function QuestionMedia({
 }: QuestionMediaProps) {
   const gap = getMediaGapMessage(question, media)
 
+  const video = question.mediaKind === 'video' || media?.kind === 'video'
   return (
-    <div className="practice-media" aria-live="polite">
-      {mediaUrl ? (
+    <div
+      className={video ? 'practice-media practice-media--stage' : 'practice-media'}
+      aria-live="polite"
+    >
+      {mediaUrl && video ? (
+        <video src={mediaUrl} controls playsInline preload="metadata" />
+      ) : mediaUrl ? (
         <img src={mediaUrl} alt="Ilustracja do pytania egzaminacyjnego" />
       ) : gap ? (
         <p className="practice-media-gap">{gap}</p>

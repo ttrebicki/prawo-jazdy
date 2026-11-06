@@ -55,6 +55,7 @@ export function FigmaPracticeQuestionView({
     question,
     deps.mediaLookup,
     deps.fetchQuestionImage,
+    deps.fetchQuestionClip,
   )
   const mediaStatus = progressLabel ?? getMediaGapMessage(question, media)
 
@@ -139,7 +140,12 @@ export function FigmaPracticeQuestionView({
         />
 
         {hasMediaArea ? (
-          <PracticeMediaCard assets={assets} mediaUrl={mediaUrl} status={mediaStatus} />
+          <PracticeMediaCard
+            assets={assets}
+            mediaUrl={mediaUrl}
+            status={mediaStatus}
+            video={question.mediaKind === 'video'}
+          />
         ) : null}
 
         <div className="figma-wide__practice-grid">
@@ -221,7 +227,12 @@ export function FigmaPracticeQuestionView({
       />
 
       {hasMediaArea ? (
-        <PracticeMediaCard assets={assets} mediaUrl={mediaUrl} status={mediaStatus} />
+        <PracticeMediaCard
+          assets={assets}
+          mediaUrl={mediaUrl}
+          status={mediaStatus}
+          video={question.mediaKind === 'video'}
+        />
       ) : (
         <PracticeTextOnlyHint assets={assets} />
       )}

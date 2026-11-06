@@ -220,6 +220,7 @@
   overflow: hidden;
 }
 
+.fp-media-card--stage,
 .fp-media-card:has(> img),
 .fp-media-card:has(> video) {
   width: 100%;
@@ -257,6 +258,13 @@
   margin: 0;
   font-size: 11px;
   color: var(--fp-muted);
+}
+
+.fp-media-card--stage .fp-media-sub {
+  font-size: 15px;
+  line-height: 1.45;
+  text-align: center;
+  padding: 0 20px;
 }
 
 .fp-text-only-hint {

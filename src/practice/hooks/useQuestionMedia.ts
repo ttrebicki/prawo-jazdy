@@ -5,6 +5,7 @@ import {
   type MediaLookup,
 } from '../../domain/question-bank.ts'
 import type { MediaAvailabilityReason, MediaResolution, QuestionRecord } from '../../domain/types.ts'
+import { clipProgressLabel, type ClipLoadProgress } from '../../storage/clip-progress.ts'
 import type { QuestionImageRead } from '../../storage/media-zip-library.ts'
 
 const imageResolution = (
@@ -24,6 +25,10 @@ export function useQuestionMedia(
     filename: string,
     onProgress?: (loaded: number, total: number) => void,
   ) => Promise<QuestionImageRead>,
+  fetchQuestionClip?: (
+    filename: string,
+    onProgress?: (progress: ClipLoadProgress) => void,
+  ) => Promise<QuestionImageRead>,
 ) {
   const [media, setMedia] = useState<MediaResolution | null>(null)
   const [progressLabel, setProgressLabel] = useState<string | null>(null)
@@ -33,6 +38,29 @@ export function useQuestionMedia(
     setMedia(null)
 
     const filename = question.mediaFilename
+    if (question.mediaKind === 'video' && filename && fetchQuestionClip) {
+      setProgressLabel(clipProgressLabel({ phase: 'read', loaded: 0, total: 1 }))
+      void fetchQuestionClip(filename, (progress) => {
+        if (!cancelled) {
+          setProgressLabel(clipProgressLabel(progress))
+        }
+      }).then((read) => {
+        if (cancelled) {
+          return
+        }
+        setProgressLabel(null)
+        setMedia({
+          kind: 'video',
+          reason: read.reason,
+          blob: read.blob,
+          filename,
+        })
+      })
+      return () => {
+        cancelled = true
+      }
+    }
+
     if (question.mediaKind === 'image' && filename && fetchQuestionImage) {
       setProgressLabel('Wczytywanie pliku z archiwum… 0%')
       void fetchQuestionImage(filename, (loaded, total) => {
@@ -62,7 +90,7 @@ export function useQuestionMedia(
     return () => {
       cancelled = true
     }
-  }, [question, mediaLookup, fetchQuestionImage])
+  }, [question, mediaLookup, fetchQuestionImage, fetchQuestionClip])
 
   const mediaViewable = media ? isMediaViewable(question, media) : false
 

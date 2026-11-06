@@ -876,6 +876,7 @@
   width: 100%;
 }
 
+.figma-wide .fp-wide-themed .fp-media-card--stage,
 .figma-wide .fp-wide-themed .fp-media-card:has(> img),
 .figma-wide .fp-wide-themed .fp-media-card:has(> video) {
   width: 100%;

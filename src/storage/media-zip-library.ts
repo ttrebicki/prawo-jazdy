@@ -1,5 +1,6 @@
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb'
 import type { MediaAvailabilityReason } from '../domain/types.ts'
+import type { ClipLoadProgress } from './clip-progress.ts'
 import {
   findZipEntry,
   indexZipEntries,
@@ -25,10 +26,14 @@ interface MediaZipDb extends DBSchema {
       handle: FileSystemFileHandle
     }
   }
+  clips: {
+    key: string
+    value: { id: string; blob: Blob }
+  }
 }
 
 const DB_NAME = 'prawo-jazdy-media-zip'
-const DB_VERSION = 1
+const DB_VERSION = 2
 
 let dbPromise: Promise<IDBPDatabase<MediaZipDb>> | null = null
 
@@ -38,6 +43,9 @@ const getHandleDb = (): Promise<IDBPDatabase<MediaZipDb>> => {
       upgrade(db) {
         if (!db.objectStoreNames.contains('handles')) {
           db.createObjectStore('handles')
+        }
+        if (!db.objectStoreNames.contains('clips')) {
+          db.createObjectStore('clips')
         }
       },
     })
@@ -83,10 +91,14 @@ export type QuestionImageRead = {
  * later visit can reopen the same desktop file. The fallback keeps the File
  * object in memory and does not copy the archive into IndexedDB.
  */
+const clipCacheId = (file: File, entryName: string, compressedSize: number): string =>
+  `${file.name}:${file.size}:${file.lastModified}:${entryName}:${compressedSize}`
+
 class MediaZipLibrary {
   private file: File | null = null
   private index: ZipEntryIndex | null = null
   private readonly cache = new Map<string, Blob>()
+  private readonly clipCache = new Map<string, Blob>()
 
   get fileName(): string | null {
     return this.file?.name ?? null
@@ -186,6 +198,62 @@ class MediaZipLibrary {
         return { blob: null, reason: 'truncated' }
       }
       return { blob: null, reason: 'truncated' }
+    }
+  }
+
+  private async storedClip(id: string): Promise<Blob | null> {
+    const memory = this.clipCache.get(id)
+    if (memory) {
+      return memory
+    }
+    const db = await getHandleDb()
+    const row = await db.get('clips', id)
+    if (!row?.blob) {
+      return null
+    }
+    this.clipCache.set(id, row.blob)
+    return row.blob
+  }
+
+  private async rememberClip(id: string, blob: Blob): Promise<void> {
+    this.clipCache.set(id, blob)
+    const db = await getHandleDb()
+    await db.put('clips', { id, blob }, id)
+  }
+
+  /** Reads one WMV from the chosen zip and converts it to MP4 in the browser. */
+  async readQuestionClip(
+    filename: string,
+    onProgress?: (progress: ClipLoadProgress) => void,
+  ): Promise<QuestionImageRead> {
+    if (!this.file || !this.index) {
+      return { blob: null, reason: 'not_attached' }
+    }
+    const entry = findZipEntry(this.index, filename)
+    if (!entry) {
+      return { blob: null, reason: 'missing_file' }
+    }
+    const id = clipCacheId(this.file, entry.name, entry.compressedSize)
+    const cached = await this.storedClip(id)
+    if (cached) {
+      onProgress?.({ phase: 'convert', ratio: 1 })
+      return { blob: cached, reason: 'available' }
+    }
+    try {
+      const wmv = await readZipEntry(this.file, entry, (loaded, total) => {
+        onProgress?.({ phase: 'read', loaded, total })
+      })
+      const { convertWmvToMp4 } = await import('./wmv-to-mp4.ts')
+      const mp4 = await convertWmvToMp4(wmv, (ratio) => {
+        onProgress?.({ phase: 'convert', ratio })
+      })
+      await this.rememberClip(id, mp4)
+      return { blob: mp4, reason: 'available' }
+    } catch (error) {
+      if (error instanceof ZipEntryTruncatedError || error instanceof ZipDirectoryUnreadableError) {
+        return { blob: null, reason: 'truncated' }
+      }
+      return { blob: null, reason: 'conversion_failed' }
     }
   }
 }

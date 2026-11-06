@@ -5,6 +5,7 @@ import {
   resolveMediaForQuestion,
 } from '../../domain/question-bank.ts'
 import { getMediaGapMessage } from '../../practice/mediaMessages.ts'
+import { clipProgressLabel } from '../../storage/clip-progress.ts'
 import {
   formatUserAnswerLabel,
   getCorrectAnswerKey,
@@ -37,6 +38,28 @@ export function PracticeQuestionView({
     setRevealed(false)
     setMedia(null)
     const filename = question.mediaFilename
+    if (question.mediaKind === 'video' && filename) {
+      setProgressLabel(clipProgressLabel({ phase: 'read', loaded: 0, total: 1 }))
+      void app.fetchQuestionClip(filename, (progress) => {
+        if (!cancelled) {
+          setProgressLabel(clipProgressLabel(progress))
+        }
+      }).then((read) => {
+        if (cancelled) {
+          return
+        }
+        setProgressLabel(null)
+        setMedia({
+          kind: 'video',
+          reason: read.reason,
+          blob: read.blob,
+          filename,
+        })
+      })
+      return () => {
+        cancelled = true
+      }
+    }
     if (question.mediaKind === 'image' && filename) {
       setProgressLabel('Wczytywanie pliku z archiwum… 0%')
       void app
@@ -116,8 +139,10 @@ export function PracticeQuestionView({
         ← Zakończ
       </button>
 
-      <div className="media-box">
-        {mediaUrl ? (
+      <div className={question.mediaKind === 'video' ? 'media-box media-box--stage' : 'media-box'}>
+        {mediaUrl && (media?.kind === 'video' || question.mediaKind === 'video') ? (
+          <video src={mediaUrl} controls playsInline preload="metadata" />
+        ) : mediaUrl ? (
           <img src={mediaUrl} alt="Ilustracja do pytania egzaminacyjnego" />
         ) : gap ? (
           <div className="media-gap">{gap}</div>

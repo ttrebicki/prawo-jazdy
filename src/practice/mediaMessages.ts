@@ -7,8 +7,8 @@ export function getMediaGapMessage(
   if (!question.mediaFilename) {
     return null
   }
-  if (media?.reason === 'video_wmv') {
-    return 'Klip WMV — ta przeglądarka nie odtwarza tego formatu. Odpowiedź bez obrazu nie liczy się jako opanowanie.'
+  if (media?.reason === 'conversion_failed' || media?.reason === 'video_wmv') {
+    return `Nie udało się przekonwertować klipu „${question.mediaFilename}” do MP4. To pytanie możesz rozwiązać bez filmu — pozostałe pytania działają.`
   }
   if (media?.reason === 'missing_file') {
     return `W tym archiwum nie ma pliku „${question.mediaFilename}”. To pytanie możesz rozwiązać bez obrazu.`

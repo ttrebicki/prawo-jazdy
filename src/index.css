@@ -170,6 +170,7 @@ input[type='file'] {
   justify-content: center;
 }
 
+.media-box--stage,
 .media-box:has(img),
 .media-box:has(video) {
   height: clamp(240px, calc(100dvh - 380px), 58dvh);

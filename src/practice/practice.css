@@ -54,6 +54,7 @@
   justify-content: center;
 }
 
+.practice-media--stage,
 .practice-media:has(img),
 .practice-media:has(video) {
   height: clamp(240px, calc(100dvh - 380px), 58dvh);

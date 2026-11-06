@@ -63,6 +63,7 @@ export type MediaAvailabilityReason =
   | 'truncated'
   | 'not_attached'
   | 'video_wmv'
+  | 'conversion_failed'
   | 'unsupported'
 
 export interface MediaResolution {
