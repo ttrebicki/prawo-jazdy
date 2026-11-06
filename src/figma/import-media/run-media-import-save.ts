@@ -1,6 +1,7 @@
 import type { StudyApp } from '../../app/study-app.ts'
 import { ACTIVE_CATEGORY } from '../../domain/types.ts'
 import { importZipImagesFromFile } from '../../storage/app-database.ts'
+import { formatZipReadProgress } from '../../storage/zip-read.ts'
 import type { MediaImportSavePayload, MediaImportSaveResult } from './types.ts'
 
 export type MediaImportProgressUpdate = {
@@ -19,9 +20,9 @@ export async function runMediaImportSave(
     )
   }
 
-  onProgress?.({ message: 'Import zdjęć z archiwum (tylko JPG/JPEG)…' })
-  const result = await importZipImagesFromFile(payload.file, (processed) => {
-    onProgress?.({ message: `Zapis multimediów… (${processed} plików)` })
+  onProgress?.({ message: 'Odczyt archiwum… 0%.' })
+  const result = await importZipImagesFromFile(payload.file, (progress) => {
+    onProgress?.({ message: formatZipReadProgress(progress) })
   })
   await studyApp.refreshMediaIndex()
   return {

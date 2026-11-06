@@ -23,6 +23,7 @@ import {
   saveProgressEntry,
   saveQuestionExplanation,
 } from '../storage/app-database.ts'
+import type { ZipReadProgress } from '../storage/zip-read.ts'
 
 export class StudyApp {
   readonly bank = new QuestionBank()
@@ -105,7 +106,7 @@ export class StudyApp {
 
   async importMediaZip(
     file: File,
-    onProgress?: (n: number) => void,
+    onProgress?: (progress: ZipReadProgress) => void,
   ): Promise<{ stored: number; skipped: number }> {
     const result = await importZipImagesFromFile(file, onProgress)
     await this.refreshMediaIndex()
@@ -113,7 +114,7 @@ export class StudyApp {
   }
 
   async importOfficialMediaZip(
-    onProgress?: (n: number) => void,
+    onProgress?: (progress: ZipReadProgress) => void,
   ): Promise<{ stored: number; skipped: number }> {
     const response = await fetch(OFFICIAL_MEDIA_ZIP_URL)
     if (!response.ok) {

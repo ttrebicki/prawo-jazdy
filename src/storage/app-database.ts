@@ -1,4 +1,10 @@
 import { Unzip, UnzipInflate } from 'fflate'
+import {
+  IncompleteMediaZipError,
+  type ZipReadProgress,
+  normalizeZipReadError,
+  pushZipChunk,
+} from './zip-read.ts'
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb'
 import type {
   CatalogMeta,
@@ -261,24 +267,36 @@ const concatBytes = (chunks: Uint8Array[]): Uint8Array => {
   return out
 }
 
-const drainZipEntry = (file: Parameters<NonNullable<Unzip['onfile']>>[0]): Promise<void> =>
+const drainZipEntry = (
+  file: Parameters<NonNullable<Unzip['onfile']>>[0],
+  noteFailure: (error: unknown) => void,
+): Promise<void> =>
   new Promise((resolve, reject) => {
     file.ondata = (err, _data, final) => {
       if (err) {
-        reject(err)
+        const normalized = normalizeZipReadError(err)
+        noteFailure(normalized)
+        reject(normalized)
         return
       }
       if (final) {
         resolve()
       }
     }
-    file.start()
+    try {
+      file.start()
+    } catch (error) {
+      const normalized = normalizeZipReadError(error)
+      noteFailure(normalized)
+      reject(normalized)
+    }
   })
 
 /** Streams zip members; never loads the whole archive into one in-memory blob. */
 const importZipImagesFromStream = async (
   reader: ReadableStreamDefaultReader<Uint8Array>,
-  onProgress?: (processed: number) => void,
+  onProgress: ((progress: ZipReadProgress) => void) | undefined,
+  totalBytes: number | null,
 ): Promise<{ stored: number; skipped: number; wmvGaps: number }> => {
   const unzip = new Unzip()
   unzip.register(UnzipInflate)
@@ -287,7 +305,35 @@ const importZipImagesFromStream = async (
   let skipped = 0
   let wmvGaps = 0
   let processed = 0
+  let bytesRead = 0
+  let readError: Error | null = null
+  let lastEmit = 0
   const pending: Promise<void>[] = []
+
+  const noteFailure = (error: unknown) => {
+    if (!readError) {
+      readError = normalizeZipReadError(error)
+    }
+  }
+
+  const emit = (force = false): boolean => {
+    const now = Date.now()
+    if (!force && now - lastEmit < 250) {
+      return false
+    }
+    lastEmit = now
+    onProgress?.({
+      bytesRead,
+      totalBytes,
+      filesProcessed: processed,
+      stored,
+    })
+    return true
+  }
+
+  // Paint 0% before the first chunk is inflated.
+  emit(true)
+  await new Promise((resolve) => setTimeout(resolve, 0))
 
   unzip.onfile = (entry) => {
     const base = entry.name.split('/').pop() ?? entry.name
@@ -295,9 +341,9 @@ const importZipImagesFromStream = async (
 
     if (lower.endsWith('.wmv')) {
       pending.push(
-        drainZipEntry(entry).then(async () => {
+        drainZipEntry(entry, noteFailure).then(async () => {
           processed += 1
-          onProgress?.(processed)
+          emit()
           await putMediaGap(base)
           wmvGaps += 1
         }),
@@ -307,9 +353,9 @@ const importZipImagesFromStream = async (
 
     if (!lower.endsWith('.jpg') && !lower.endsWith('.jpeg')) {
       pending.push(
-        drainZipEntry(entry).then(() => {
+        drainZipEntry(entry, noteFailure).then(() => {
           processed += 1
-          onProgress?.(processed)
+          emit()
           skipped += 1
         }),
       )
@@ -321,7 +367,9 @@ const importZipImagesFromStream = async (
         const chunks: Uint8Array[] = []
         entry.ondata = (err, data, final) => {
           if (err) {
-            reject(err)
+            const normalized = normalizeZipReadError(err)
+            noteFailure(normalized)
+            reject(normalized)
             return
           }
           if (data) {
@@ -329,46 +377,81 @@ const importZipImagesFromStream = async (
           }
           if (final) {
             processed += 1
-            onProgress?.(processed)
+            emit()
             const bytes = concatBytes(chunks)
             putMediaFile(base, new Blob([bytes.slice()], { type: 'image/jpeg' }))
               .then(() => {
                 stored += 1
+                emit()
                 resolve()
               })
-              .catch(reject)
+              .catch((error: unknown) => {
+                noteFailure(error)
+                reject(error)
+              })
           }
         }
-        entry.start()
+        try {
+          entry.start()
+        } catch (error) {
+          const normalized = normalizeZipReadError(error)
+          noteFailure(normalized)
+          reject(normalized)
+        }
       }),
     )
   }
 
-  while (true) {
+  while (!readError) {
     const { done, value } = await reader.read()
-    unzip.push(value ?? new Uint8Array(0), done)
-    if (done) {
+    const chunk = value ?? new Uint8Array(0)
+    bytesRead += chunk.length
+    try {
+      pushZipChunk(unzip, chunk, done)
+    } catch (error) {
+      noteFailure(error)
+    }
+    if (done && totalBytes != null && bytesRead < totalBytes) {
+      noteFailure(new IncompleteMediaZipError())
+    }
+    if (emit() || readError) {
+      await new Promise((resolve) => setTimeout(resolve, 0))
+    }
+    if (done || readError) {
       break
     }
   }
 
-  await Promise.all(pending)
+  await Promise.allSettled(pending)
+  if (readError) {
+    await reader.cancel().catch(() => undefined)
+    throw readError
+  }
+  if (processed === 0) {
+    throw new IncompleteMediaZipError()
+  }
+
+  emit(true)
   return { stored, skipped, wmvGaps }
 }
 
 export async function importZipImagesFromFile(
   file: File,
-  onProgress?: (processed: number) => void,
+  onProgress?: (progress: ZipReadProgress) => void,
 ): Promise<{ stored: number; skipped: number; wmvGaps: number }> {
-  return importZipImagesFromStream(file.stream().getReader(), onProgress)
+  return importZipImagesFromStream(file.stream().getReader(), onProgress, file.size)
 }
 
 export async function importZipImagesFromResponse(
   response: Response,
-  onProgress?: (processed: number) => void,
+  onProgress?: (progress: ZipReadProgress) => void,
 ): Promise<{ stored: number; skipped: number; wmvGaps: number }> {
   if (!response.body) {
     throw new Error('Serwer nie zwrócił strumienia danych.')
   }
-  return importZipImagesFromStream(response.body.getReader(), onProgress)
+  const lengthHeader = Number(response.headers.get('content-length'))
+  const totalBytes = Number.isFinite(lengthHeader) && lengthHeader > 0 ? lengthHeader : null
+  return importZipImagesFromStream(response.body.getReader(), onProgress, totalBytes)
 }
+
+export type { ZipReadProgress }

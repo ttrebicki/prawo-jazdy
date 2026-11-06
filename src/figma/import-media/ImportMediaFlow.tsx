@@ -12,6 +12,7 @@ import {
   OFFICIAL_MEDIA_ZIP_URL,
 } from './media-zip-file.ts'
 import type { MediaImportProgressUpdate } from './run-media-import-save.ts'
+import { IncompleteMediaZipError } from '../../storage/zip-read.ts'
 import type {
   MediaImportResultViewModel,
   MediaImportSavePayload,
@@ -68,10 +69,14 @@ export function ImportMediaFlow({
       setPhase('result')
       setStatusMessage(null)
     } catch (e) {
+      const incomplete = e instanceof IncompleteMediaZipError
       reportError(
-        e instanceof Error
+        incomplete
           ? e.message
-          : 'Import multimediów nie powiódł się. Poprzednie pliki pozostają.',
+          : e instanceof Error
+            ? e.message
+            : 'Import multimediów nie powiódł się. Poprzednie pliki pozostają.',
+        incomplete,
       )
       setStatusMessage(null)
     } finally {
