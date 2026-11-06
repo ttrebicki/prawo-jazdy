@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import { getMediaGapMessage } from '../src/practice/mediaMessages.ts'
-import { clipProgressLabel } from '../src/storage/clip-progress.ts'
+import {
+  clipBatchLabel,
+  clipProgressLabel,
+  isVideoZipName,
+  prioritizeIds,
+} from '../src/storage/clip-progress.ts'
 import type { QuestionRecord } from '../src/domain/types.ts'
 
 const clipQuestion = {
@@ -20,8 +25,33 @@ describe('clipProgressLabel', () => {
       'Wczytywanie klipu z archiwum… 25%',
     )
     expect(clipProgressLabel({ phase: 'convert', ratio: 0.4 })).toBe(
-      'Konwertuję klip do MP4… 40%',
+      'Konwertuję ten klip… 40%',
     )
+    expect(clipProgressLabel({ phase: 'queued' })).toContain('w tle')
+  })
+})
+
+describe('background clip order', () => {
+  it('keeps only wmv names from the central directory', () => {
+    expect(isVideoZipName('media/klip.WMV')).toBe(true)
+    expect(isVideoZipName('foto.jpg')).toBe(false)
+  })
+
+  it('puts the questions about to be seen ahead of the rest of the zip', () => {
+    const pending = ['other.wmv', 'soon-b.wmv', 'later.wmv', 'soon-a.wmv']
+    expect(prioritizeIds(pending, ['now.wmv', 'soon-a.wmv', 'soon-b.wmv'])).toEqual([
+      'soon-a.wmv',
+      'soon-b.wmv',
+      'other.wmv',
+      'later.wmv',
+    ])
+  })
+
+  it('hides the quiet status once every clip has been tried', () => {
+    expect(clipBatchLabel({ done: 1, failed: 0, total: 4 })).toBe(
+      'Konwersja klipów w tle: 1 z 4',
+    )
+    expect(clipBatchLabel({ done: 3, failed: 1, total: 4 })).toBeNull()
   })
 })
 

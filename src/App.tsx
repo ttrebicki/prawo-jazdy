@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { studyApp } from './app/study-app.ts'
 import {
+  ACTIVE_CATEGORY,
   DEFAULT_PRACTICE_FILTERS,
   type PracticeFilters,
   type QuestionRecord,
@@ -62,15 +63,38 @@ function App() {
     })()
   }, [])
 
+  const focusUpcomingClips = useCallback(
+    (immediate: QuestionRecord | null) => {
+      const candidates = studyApp.bank.filterPracticeCandidates(
+        ACTIVE_CATEGORY,
+        filters,
+        studyApp.progress.asMap(ACTIVE_CATEGORY),
+        studyApp.hasImageOnDevice,
+      )
+      const upcoming = candidates.flatMap((question) =>
+        question.mediaKind === 'video' && question.mediaFilename
+          ? [question.mediaFilename]
+          : [],
+      )
+      const first =
+        immediate?.mediaKind === 'video' && immediate.mediaFilename
+          ? [immediate.mediaFilename]
+          : []
+      studyApp.prioritizePracticeClips([...first, ...upcoming])
+    },
+    [filters],
+  )
+
   const startPractice = useCallback(() => {
     const q = pickQuestion()
     if (!q) {
       window.alert('Brak pytań dla wybranych filtrów.')
       return
     }
+    focusUpcomingClips(q)
     setCurrentQuestion(q)
     setView(VIEW_PRACTICE)
-  }, [pickQuestion])
+  }, [pickQuestion, focusUpcomingClips])
 
   const handleNext = useCallback(
     (previous: QuestionRecord) => {
@@ -82,9 +106,10 @@ function App() {
         refresh()
         return
       }
+      focusUpcomingClips(next)
       setCurrentQuestion(next)
     },
-    [pickQuestion, refresh],
+    [pickQuestion, refresh, focusUpcomingClips],
   )
 
   if (!ready) {
@@ -172,6 +197,7 @@ function App() {
           progress={studyApp.progress}
           getQuestion={(number) => studyApp.bank.getByNumber(number)}
           onOpenQuestion={(q) => {
+            focusUpcomingClips(q)
             setCurrentQuestion(q)
             setView(VIEW_PRACTICE)
           }}

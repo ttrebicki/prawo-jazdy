@@ -1,6 +1,11 @@
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb'
 import type { MediaAvailabilityReason } from '../domain/types.ts'
-import type { ClipLoadProgress } from './clip-progress.ts'
+import {
+  isVideoZipName,
+  prioritizeIds,
+  type ClipBatchStatus,
+  type ClipLoadProgress,
+} from './clip-progress.ts'
 import {
   findZipEntry,
   indexZipEntries,
@@ -9,6 +14,7 @@ import {
   ZipDirectoryUnreadableError,
   ZipEntryTruncatedError,
   type ZipEntryIndex,
+  type ZipEntryMeta,
 } from './zip-directory.ts'
 
 type ShowOpenFilePicker = (options?: {
@@ -94,11 +100,29 @@ export type QuestionImageRead = {
 const clipCacheId = (file: File, entryName: string, compressedSize: number): string =>
   `${file.name}:${file.size}:${file.lastModified}:${entryName}:${compressedSize}`
 
+type ClipJob = {
+  id: string
+  entry: ZipEntryMeta
+  status: 'queued' | 'running' | 'done' | 'failed'
+  result: QuestionImageRead | null
+  listeners: Set<(progress: ClipLoadProgress) => void>
+  waiters: Array<(result: QuestionImageRead) => void>
+}
+
 class MediaZipLibrary {
   private file: File | null = null
   private index: ZipEntryIndex | null = null
   private readonly cache = new Map<string, Blob>()
   private readonly clipCache = new Map<string, Blob>()
+  private jobs = new Map<string, ClipJob>()
+  private order: string[] = []
+  private generation = 0
+  private pumping = false
+  private doneCount = 0
+  private failedCount = 0
+  private totalCount = 0
+  private currentRatio = 0
+  private readonly batchListeners = new Set<(status: ClipBatchStatus) => void>()
 
   get fileName(): string | null {
     return this.file?.name ?? null
@@ -129,8 +153,9 @@ class MediaZipLibrary {
     this.file = file
     this.index = indexZipEntries(entries)
     this.cache.clear()
+    this.beginClipQueue()
     onProgress?.(
-      `Archiwum podpięte (${this.entryCount} pozycji). Obraz wczyta się przy pytaniu.`,
+      `Archiwum podpięte (${this.entryCount} pozycji). Klipy konwertują się w tle.`,
     )
   }
 
@@ -221,7 +246,41 @@ class MediaZipLibrary {
     await db.put('clips', { id, blob }, id)
   }
 
-  /** Reads one WMV from the chosen zip and converts it to MP4 in the browser. */
+  /** Puts practice clips ahead of the rest of the zip. Does not start a second converter. */
+  prioritizeFilenames(filenames: readonly string[]): void {
+    if (!this.file || !this.index || filenames.length === 0) {
+      return
+    }
+    const preferred: string[] = []
+    for (const name of filenames) {
+      const entry = findZipEntry(this.index, name)
+      if (!entry || !isVideoZipName(entry.name)) {
+        continue
+      }
+      const id = clipCacheId(this.file, entry.name, entry.compressedSize)
+      const job = this.jobs.get(id)
+      if (job?.status === 'queued') {
+        preferred.push(id)
+      }
+    }
+    if (preferred.length === 0) {
+      return
+    }
+    this.order = prioritizeIds(this.order, preferred)
+  }
+
+  subscribeClipBatch(listener: (status: ClipBatchStatus) => void): () => void {
+    this.batchListeners.add(listener)
+    listener(this.batchStatus())
+    return () => {
+      this.batchListeners.delete(listener)
+    }
+  }
+
+  /**
+   * Returns a clip the background queue already converted, or waits until that
+   * queue reaches it. Opening a question does not start a new conversion.
+   */
   async readQuestionClip(
     filename: string,
     onProgress?: (progress: ClipLoadProgress) => void,
@@ -236,24 +295,173 @@ class MediaZipLibrary {
     const id = clipCacheId(this.file, entry.name, entry.compressedSize)
     const cached = await this.storedClip(id)
     if (cached) {
-      onProgress?.({ phase: 'convert', ratio: 1 })
       return { blob: cached, reason: 'available' }
     }
-    try {
-      const wmv = await readZipEntry(this.file, entry, (loaded, total) => {
-        onProgress?.({ phase: 'read', loaded, total })
-      })
-      const { convertWmvToMp4 } = await import('./wmv-to-mp4.ts')
-      const mp4 = await convertWmvToMp4(wmv, (ratio) => {
-        onProgress?.({ phase: 'convert', ratio })
-      })
-      await this.rememberClip(id, mp4)
-      return { blob: mp4, reason: 'available' }
-    } catch (error) {
-      if (error instanceof ZipEntryTruncatedError || error instanceof ZipDirectoryUnreadableError) {
-        return { blob: null, reason: 'truncated' }
+    const job = this.jobs.get(id)
+    if (!job) {
+      return { blob: null, reason: 'missing_file' }
+    }
+    if (job.result) {
+      return job.result
+    }
+    if (job.status === 'queued') {
+      this.order = prioritizeIds(this.order, [id])
+      onProgress?.({ phase: 'queued' })
+    } else if (job.status === 'running') {
+      onProgress?.({ phase: 'convert', ratio: this.currentRatio })
+    }
+    return new Promise((resolve) => {
+      job.waiters.push(resolve)
+      if (onProgress) {
+        job.listeners.add(onProgress)
       }
-      return { blob: null, reason: 'conversion_failed' }
+    })
+  }
+
+  private batchStatus(): ClipBatchStatus {
+    return {
+      done: this.doneCount,
+      failed: this.failedCount,
+      total: this.totalCount,
+    }
+  }
+
+  private emitBatch(): void {
+    const status = this.batchStatus()
+    for (const listener of this.batchListeners) {
+      listener(status)
+    }
+  }
+
+  private beginClipQueue(): void {
+    this.generation += 1
+    const generation = this.generation
+    for (const job of this.jobs.values()) {
+      if (job.result) {
+        continue
+      }
+      const dropped = { blob: null, reason: 'not_attached' as const }
+      for (const waiter of job.waiters) {
+        waiter(dropped)
+      }
+    }
+    this.jobs = new Map()
+    this.order = []
+    this.doneCount = 0
+    this.failedCount = 0
+    this.totalCount = 0
+    this.currentRatio = 0
+    const file = this.file
+    const index = this.index
+    if (!file || !index) {
+      this.emitBatch()
+      return
+    }
+    for (const entry of index.byPath.values()) {
+      if (!isVideoZipName(entry.name)) {
+        continue
+      }
+      const id = clipCacheId(file, entry.name, entry.compressedSize)
+      if (this.jobs.has(id)) {
+        continue
+      }
+      this.jobs.set(id, {
+        id,
+        entry,
+        status: 'queued',
+        result: null,
+        listeners: new Set(),
+        waiters: [],
+      })
+      this.order.push(id)
+    }
+    this.totalCount = this.order.length
+    this.emitBatch()
+    void this.pump(generation)
+  }
+
+  private finishJob(job: ClipJob, result: QuestionImageRead): void {
+    job.status = result.blob ? 'done' : 'failed'
+    job.result = result
+    if (result.blob) {
+      this.doneCount += 1
+    } else {
+      this.failedCount += 1
+    }
+    for (const waiter of job.waiters) {
+      waiter(result)
+    }
+    job.waiters = []
+    job.listeners.clear()
+    this.emitBatch()
+  }
+
+  private async pump(generation: number): Promise<void> {
+    if (this.pumping) {
+      return
+    }
+    this.pumping = true
+    try {
+      while (generation === this.generation && this.order.length > 0) {
+        const id = this.order.shift()
+        const job = id ? this.jobs.get(id) : undefined
+        const file = this.file
+        if (!id || !job || job.status !== 'queued' || !file) {
+          continue
+        }
+        const cached = await this.storedClip(id)
+        if (generation !== this.generation) {
+          return
+        }
+        if (cached) {
+          this.finishJob(job, { blob: cached, reason: 'available' })
+          continue
+        }
+        job.status = 'running'
+        this.currentRatio = 0
+        this.emitBatch()
+        try {
+          const wmv = await readZipEntry(file, job.entry, (loaded, total) => {
+            this.currentRatio = total > 0 ? loaded / total : 0
+            const progress: ClipLoadProgress = { phase: 'read', loaded, total }
+            for (const listener of job.listeners) {
+              listener(progress)
+            }
+          })
+          if (generation !== this.generation) {
+            return
+          }
+          const { convertWmvToMp4 } = await import('./wmv-to-mp4.ts')
+          const mp4 = await convertWmvToMp4(wmv, (ratio) => {
+            this.currentRatio = ratio
+            const progress: ClipLoadProgress = { phase: 'convert', ratio }
+            for (const listener of job.listeners) {
+              listener(progress)
+            }
+          })
+          if (generation !== this.generation) {
+            return
+          }
+          await this.rememberClip(id, mp4)
+          this.finishJob(job, { blob: mp4, reason: 'available' })
+        } catch (error) {
+          if (generation !== this.generation) {
+            return
+          }
+          const reason =
+            error instanceof ZipEntryTruncatedError || error instanceof ZipDirectoryUnreadableError
+              ? 'truncated'
+              : 'conversion_failed'
+          this.finishJob(job, { blob: null, reason })
+        }
+        await new Promise((resolve) => setTimeout(resolve, 0))
+      }
+    } finally {
+      this.pumping = false
+      this.emitBatch()
+      if (generation !== this.generation && this.order.length > 0) {
+        void this.pump(this.generation)
+      }
     }
   }
 }

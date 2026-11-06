@@ -24,6 +24,26 @@
   }
 }
 
+.clip-bg-status {
+  --clip-bg-ink: #f5f4f0;
+  --clip-bg-fill: rgba(32, 39, 48, 0.88);
+  position: fixed;
+  z-index: 30;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+  margin: 0;
+  max-width: min(92vw, 420px);
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: var(--clip-bg-fill);
+  color: var(--clip-bg-ink);
+  font-size: 13px;
+  line-height: 1.4;
+  text-align: center;
+  pointer-events: none;
+}
+
 @media (max-width: 767.98px) {
   .figma-app-shell {
     min-height: 100dvh;

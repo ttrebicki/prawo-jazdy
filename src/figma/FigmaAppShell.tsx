@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import type { AppTheme } from './app-theme.ts'
+import { ClipBackgroundStatus } from './ClipBackgroundStatus.tsx'
 import { FigmaLayoutProvider } from './layout/FigmaLayoutContext.tsx'
 import { FigmaWideChrome } from './wide/FigmaWideChrome.tsx'
 import type { AppView } from '../ui/navigation.ts'
@@ -44,6 +45,7 @@ export function FigmaAppShell({
         <div className="figma-shell-wide">
           <FigmaWideChrome>{children}</FigmaWideChrome>
         </div>
+        <ClipBackgroundStatus />
       </div>
     </FigmaLayoutProvider>
   )

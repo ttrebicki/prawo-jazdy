@@ -92,6 +92,11 @@ export class StudyApp {
     onProgress?: (progress: ClipLoadProgress) => void,
   ): Promise<QuestionImageRead> => mediaZipLibrary.readQuestionClip(filename, onProgress)
 
+  /** Practice clips move ahead of the rest of the zip. Conversion itself already started at import. */
+  prioritizePracticeClips(filenames: readonly string[]): void {
+    mediaZipLibrary.prioritizeFilenames(filenames)
+  }
+
   hasImageOnDevice = (filename: string): boolean => mediaZipLibrary.hasImage(filename)
 
   async refreshMediaIndex(): Promise<number> {
